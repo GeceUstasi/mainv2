@@ -1,5 +1,5 @@
--- DÜZELTED MODERN ROBLOX GUI FRAMEWORK - AURELIUS STYLE
--- Hataları giderilmiş, tam çalışan versiyon
+-- BASIT MODERN ROBLOX GUI FRAMEWORK - AURELIUS STYLE
+-- Tüm hatalar giderilmiş, sadece çalışan özellikler
 
 local ModernGUI = {}
 ModernGUI.__index = ModernGUI
@@ -16,7 +16,7 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 
 -- Modern Theme (Aurelius benzeri)
 local ModernTheme = {
-    -- Ana renkler (Türkuaz/Teal tema)
+    -- Ana renkler (Türkuaz tema)
     Primary = Color3.fromRGB(64, 224, 208),        -- Turquoise
     Secondary = Color3.fromRGB(72, 201, 176),      -- Medium turquoise
     Accent = Color3.fromRGB(26, 188, 156),         -- Emerald
@@ -74,7 +74,6 @@ function ModernGUI.new(title)
         if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
             pcall(function()
                 self.ScreenGui.Enabled = false
-                -- Notification göstermeden kapat
             end)
         end
     end)
@@ -85,7 +84,7 @@ function ModernGUI.new(title)
     return self
 end
 
-    -- Ana window oluştur (Aurelius benzeri)
+-- Ana window oluşturma (Aurelius benzeri)
 function ModernGUI:createMainWindow()
     local window = Instance.new("Frame")
     window.Name = "MainWindow"
@@ -304,7 +303,7 @@ function ModernGUI:_createTopBar(parent)
     }
 end
 
--- Tab oluşturma (sidebar'da) - DÜZELTİLMİŞ
+-- Tab oluşturma (sidebar'da)
 function ModernGUI:createTab(window, options)
     options = options or {}
     local tabData = {
@@ -657,6 +656,205 @@ function ModernGUI:createSlider(parent, options)
     return container
 end
 
+-- Modern textbox oluşturma
+function ModernGUI:createTextbox(parent, options)
+    options = options or {}
+    local textboxData = {
+        Text = options.Text or "Textbox",
+        Placeholder = options.Placeholder or "Enter text...",
+        Default = options.Default or "",
+        Callback = options.Callback or function() end
+    }
+    
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 65)
+    container.BackgroundColor3 = ModernTheme.Surface
+    container.BorderSizePixel = 0
+    container.Parent = parent
+    
+    local bgCorner = Instance.new("UICorner")
+    bgCorner.CornerRadius = UDim.new(0, 8)
+    bgCorner.Parent = container
+    
+    -- Label
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -20, 0, 25)
+    label.Position = UDim2.new(0, 15, 0, 8)
+    label.BackgroundTransparency = 1
+    label.Text = textboxData.Text
+    label.TextColor3 = ModernTheme.TextPrimary
+    label.Font = Enum.Font.GothamSemibold
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = container
+    
+    -- Textbox
+    local textbox = Instance.new("TextBox")
+    textbox.Size = UDim2.new(1, -30, 0, 25)
+    textbox.Position = UDim2.new(0, 15, 0, 32)
+    textbox.BackgroundColor3 = ModernTheme.Background
+    textbox.BorderSizePixel = 0
+    textbox.Text = textboxData.Default
+    textbox.PlaceholderText = textboxData.Placeholder
+    textbox.TextColor3 = ModernTheme.TextPrimary
+    textbox.PlaceholderColor3 = ModernTheme.TextMuted
+    textbox.Font = Enum.Font.Gotham
+    textbox.TextSize = 12
+    textbox.TextXAlignment = Enum.TextXAlignment.Left
+    textbox.Parent = container
+    
+    local textboxCorner = Instance.new("UICorner")
+    textboxCorner.CornerRadius = UDim.new(0, 6)
+    textboxCorner.Parent = textbox
+    
+    -- Focus effects
+    textbox.Focused:Connect(function()
+        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        TweenService:Create(textbox, tweenInfo, {BackgroundColor3 = ModernTheme.SurfaceLight}):Play()
+    end)
+    
+    textbox.FocusLost:Connect(function()
+        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        TweenService:Create(textbox, tweenInfo, {BackgroundColor3 = ModernTheme.Background}):Play()
+        textboxData.Callback(textbox.Text)
+    end)
+    
+    container.GetValue = function() return textbox.Text end
+    container.SetValue = function(value) textbox.Text = value end
+    
+    return container
+end
+
+-- Modern dropdown oluşturma
+function ModernGUI:createDropdown(parent, options)
+    options = options or {}
+    local dropdownData = {
+        Text = options.Text or "Dropdown",
+        Options = options.Options or {"Option 1", "Option 2", "Option 3"},
+        Default = options.Default or options.Options[1],
+        Callback = options.Callback or function() end
+    }
+    
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 65)
+    container.BackgroundColor3 = ModernTheme.Surface
+    container.BorderSizePixel = 0
+    container.Parent = parent
+    
+    local bgCorner = Instance.new("UICorner")
+    bgCorner.CornerRadius = UDim.new(0, 8)
+    bgCorner.Parent = container
+    
+    -- Label
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -20, 0, 25)
+    label.Position = UDim2.new(0, 15, 0, 8)
+    label.BackgroundTransparency = 1
+    label.Text = dropdownData.Text
+    label.TextColor3 = ModernTheme.TextPrimary
+    label.Font = Enum.Font.GothamSemibold
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = container
+    
+    -- Dropdown button
+    local dropdownButton = Instance.new("TextButton")
+    dropdownButton.Size = UDim2.new(1, -30, 0, 25)
+    dropdownButton.Position = UDim2.new(0, 15, 0, 32)
+    dropdownButton.BackgroundColor3 = ModernTheme.Background
+    dropdownButton.BorderSizePixel = 0
+    dropdownButton.Text = dropdownData.Default .. " ▼"
+    dropdownButton.TextColor3 = ModernTheme.TextPrimary
+    dropdownButton.Font = Enum.Font.Gotham
+    dropdownButton.TextSize = 12
+    dropdownButton.TextXAlignment = Enum.TextXAlignment.Left
+    dropdownButton.Parent = container
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 6)
+    buttonCorner.Parent = dropdownButton
+    
+    -- Dropdown list (başlangıçta gizli)
+    local dropdownList = Instance.new("Frame")
+    dropdownList.Size = UDim2.new(1, -30, 0, math.min(#dropdownData.Options * 30, 120))
+    dropdownList.Position = UDim2.new(0, 15, 0, 62)
+    dropdownList.BackgroundColor3 = ModernTheme.Background
+    dropdownList.BorderSizePixel = 0
+    dropdownList.Visible = false
+    dropdownList.ZIndex = 10
+    dropdownList.Parent = container
+    
+    local listCorner = Instance.new("UICorner")
+    listCorner.CornerRadius = UDim.new(0, 6)
+    listCorner.Parent = dropdownList
+    
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Parent = dropdownList
+    
+    local currentValue = dropdownData.Default
+    local isOpen = false
+    
+    -- Create option buttons
+    for _, option in ipairs(dropdownData.Options) do
+        local optionButton = Instance.new("TextButton")
+        optionButton.Size = UDim2.new(1, 0, 0, 30)
+        optionButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        optionButton.BackgroundTransparency = 1
+        optionButton.BorderSizePixel = 0
+        optionButton.Text = option
+        optionButton.TextColor3 = ModernTheme.TextPrimary
+        optionButton.Font = Enum.Font.Gotham
+        optionButton.TextSize = 12
+        optionButton.TextXAlignment = Enum.TextXAlignment.Left
+        optionButton.Parent = dropdownList
+        
+        optionButton.MouseButton1Click:Connect(function()
+            currentValue = option
+            dropdownButton.Text = option .. " ▼"
+            dropdownList.Visible = false
+            isOpen = false
+            container.Size = UDim2.new(1, 0, 0, 65)
+            dropdownData.Callback(option)
+        end)
+        
+        -- Hover effect
+        optionButton.MouseEnter:Connect(function()
+            optionButton.BackgroundTransparency = 0
+            optionButton.BackgroundColor3 = ModernTheme.Primary
+        end)
+        optionButton.MouseLeave:Connect(function()
+            optionButton.BackgroundTransparency = 1
+        end)
+    end
+    
+    -- Toggle dropdown
+    dropdownButton.MouseButton1Click:Connect(function()
+        isOpen = not isOpen
+        dropdownList.Visible = isOpen
+        
+        if isOpen then
+            container.Size = UDim2.new(1, 0, 0, 65 + dropdownList.AbsoluteSize.Y + 5)
+            dropdownButton.Text = currentValue .. " ▲"
+        else
+            container.Size = UDim2.new(1, 0, 0, 65)
+            dropdownButton.Text = currentValue .. " ▼"
+        end
+    end)
+    
+    self:_addHoverEffect(dropdownButton)
+    
+    container.GetValue = function() return currentValue end
+    container.SetValue = function(value)
+        if table.find(dropdownData.Options, value) then
+            currentValue = value
+            dropdownButton.Text = value .. (isOpen and " ▲" or " ▼")
+        end
+    end
+    
+    return container
+end
+
 -- Modern notification sistemi
 function ModernGUI:createNotification(options)
     options = options or {}
@@ -765,100 +963,6 @@ end
 
 function ModernGUI:_createNotificationSystem()
     -- Bildirim sistemi konteyner
-end
-
--- Settings area oluşturma (keybind ayarları için)
-function ModernGUI:_createSettingsArea(parent)
-    local settingsButton = Instance.new("TextButton")
-    settingsButton.Size = UDim2.new(0, 30, 0, 30)
-    settingsButton.Position = UDim2.new(1, -40, 0, 5)
-    settingsButton.BackgroundColor3 = ModernTheme.Surface
-    settingsButton.BorderSizePixel = 0
-    settingsButton.Text = "⚙️"
-    settingsButton.TextColor3 = ModernTheme.TextPrimary
-    settingsButton.Font = Enum.Font.Gotham
-    settingsButton.TextSize = 16
-    settingsButton.Parent = parent
-    
-    local buttonCorner = Instance.new("UICorner")
-    buttonCorner.CornerRadius = UDim.new(0, 8)
-    buttonCorner.Parent = settingsButton
-    
-    -- Settings panel (başlangıçta gizli)
-    local settingsPanel = Instance.new("Frame")
-    settingsPanel.Size = UDim2.new(0, 250, 0, 200)
-    settingsPanel.Position = UDim2.new(1, -260, 0, 40)
-    settingsPanel.BackgroundColor3 = ModernTheme.Surface
-    settingsPanel.BorderSizePixel = 0
-    settingsPanel.Visible = false
-    settingsPanel.Parent = parent
-    
-    local panelCorner = Instance.new("UICorner")
-    panelCorner.CornerRadius = UDim.new(0, 10)
-    panelCorner.Parent = settingsPanel
-    
-    -- Settings title
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 0, 40)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "⚙️ Settings"
-    titleLabel.TextColor3 = ModernTheme.Primary
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 16
-    titleLabel.Parent = settingsPanel
-    
-    -- Settings content
-    local settingsContent = Instance.new("ScrollingFrame")
-    settingsContent.Size = UDim2.new(1, -20, 1, -50)
-    settingsContent.Position = UDim2.new(0, 10, 0, 40)
-    settingsContent.BackgroundTransparency = 1
-    settingsContent.BorderSizePixel = 0
-    settingsContent.ScrollBarThickness = 4
-    settingsContent.ScrollBarImageColor3 = ModernTheme.Primary
-    settingsContent.CanvasSize = UDim2.new(0, 0, 0, 0)
-    settingsContent.Parent = settingsPanel
-    
-    local settingsLayout = Instance.new("UIListLayout")
-    settingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    settingsLayout.Padding = UDim.new(0, 8)
-    settingsLayout.Parent = settingsContent
-    
-    -- Auto resize canvas
-    settingsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        settingsContent.CanvasSize = UDim2.new(0, 0, 0, settingsLayout.AbsoluteContentSize.Y + 10)
-    end)
-    
-    -- Toggle settings panel
-    settingsButton.MouseButton1Click:Connect(function()
-        settingsPanel.Visible = not settingsPanel.Visible
-        
-        -- Animate panel
-        if settingsPanel.Visible then
-            settingsPanel.Size = UDim2.new(0, 0, 0, 0)
-            local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-            TweenService:Create(settingsPanel, tweenInfo, {Size = UDim2.new(0, 250, 0, 200)}):Play()
-        end
-    end)
-    
-    -- Add simple keybind info (settings panel içeriği basitleştirildi)
-    local infoLabel = Instance.new("TextLabel")
-    infoLabel.Size = UDim2.new(1, 0, 0, 40)
-    infoLabel.BackgroundTransparency = 1
-    infoLabel.Text = "Keybinds:\n• INSERT - Toggle GUI\n• ESC - Close GUI\n• F3 - Change Theme"
-    infoLabel.TextColor3 = ModernTheme.TextSecondary
-    infoLabel.Font = Enum.Font.Gotham
-    infoLabel.TextSize = 12
-    infoLabel.TextYAlignment = Enum.TextYAlignment.Top
-    infoLabel.TextWrapped = true
-    infoLabel.Parent = settingsContent
-    
-    self:_addButtonHoverEffect(settingsButton)
-    
-    return {
-        Button = settingsButton,
-        Panel = settingsPanel,
-        Content = settingsContent
-    }
 end
 
 function ModernGUI:_addModernHoverEffect(button, icon, title, isActive)
