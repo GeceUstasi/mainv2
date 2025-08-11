@@ -62,6 +62,11 @@ function ModernGUI.new(title)
     self.IsVisible = true
     self.CurrentTab = nil
     
+    -- Initialize keybinds
+    self.ToggleKey = Enum.KeyCode.Insert
+    self.CloseKey = Enum.KeyCode.Escape
+    self.ThemeKey = Enum.KeyCode.F3
+    
     -- Ana ScreenGui
     self.ScreenGui = Instance.new("ScreenGui")
     self.ScreenGui.Name = "ModernGUI_" .. self.Title
@@ -848,10 +853,15 @@ end
 
 -- Keybind ayarları ekleme
 function ModernGUI:_addKeybindSettings(parent)
+    -- Initialize default keybinds
+    self.ToggleKey = self.ToggleKey or Enum.KeyCode.Insert
+    self.CloseKey = self.CloseKey or Enum.KeyCode.Escape
+    self.ThemeKey = self.ThemeKey or Enum.KeyCode.F3
+    
     -- Toggle GUI keybind
     self:createKeybindSetting(parent, {
         Text = "Toggle GUI",
-        Default = Enum.KeyCode.Insert,
+        Default = self.ToggleKey,
         Callback = function(keyCode)
             self.ToggleKey = keyCode
         end
@@ -860,7 +870,7 @@ function ModernGUI:_addKeybindSettings(parent)
     -- Close GUI keybind  
     self:createKeybindSetting(parent, {
         Text = "Close GUI",
-        Default = Enum.KeyCode.Escape,
+        Default = self.CloseKey,
         Callback = function(keyCode)
             self.CloseKey = keyCode
         end
@@ -869,7 +879,7 @@ function ModernGUI:_addKeybindSettings(parent)
     -- Change theme keybind
     self:createKeybindSetting(parent, {
         Text = "Change Theme",
-        Default = Enum.KeyCode.F3,
+        Default = self.ThemeKey,
         Callback = function(keyCode)
             self.ThemeKey = keyCode
         end
