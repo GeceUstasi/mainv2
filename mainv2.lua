@@ -839,8 +839,17 @@ function ModernGUI:_createSettingsArea(parent)
         end
     end)
     
-    -- Add keybind settings
-    self:_addKeybindSettings(settingsContent)
+    -- Add simple keybind info (settings panel içeriği basitleştirildi)
+    local infoLabel = Instance.new("TextLabel")
+    infoLabel.Size = UDim2.new(1, 0, 0, 40)
+    infoLabel.BackgroundTransparency = 1
+    infoLabel.Text = "Keybinds:\n• INSERT - Toggle GUI\n• ESC - Close GUI\n• F3 - Change Theme"
+    infoLabel.TextColor3 = ModernTheme.TextSecondary
+    infoLabel.Font = Enum.Font.Gotham
+    infoLabel.TextSize = 12
+    infoLabel.TextYAlignment = Enum.TextYAlignment.Top
+    infoLabel.TextWrapped = true
+    infoLabel.Parent = settingsContent
     
     self:_addButtonHoverEffect(settingsButton)
     
@@ -849,113 +858,6 @@ function ModernGUI:_createSettingsArea(parent)
         Panel = settingsPanel,
         Content = settingsContent
     }
-end
-
--- Keybind ayarları ekleme
-function ModernGUI:_addKeybindSettings(parent)
-    -- Initialize default keybinds
-    self.ToggleKey = self.ToggleKey or Enum.KeyCode.Insert
-    self.CloseKey = self.CloseKey or Enum.KeyCode.Escape
-    self.ThemeKey = self.ThemeKey or Enum.KeyCode.F3
-    
-    -- Toggle GUI keybind
-    self:createKeybindSetting(parent, {
-        Text = "Toggle GUI",
-        Default = self.ToggleKey,
-        Callback = function(keyCode)
-            self.ToggleKey = keyCode
-        end
-    })
-    
-    -- Close GUI keybind  
-    self:createKeybindSetting(parent, {
-        Text = "Close GUI",
-        Default = self.CloseKey,
-        Callback = function(keyCode)
-            self.CloseKey = keyCode
-        end
-    })
-    
-    -- Change theme keybind
-    self:createKeybindSetting(parent, {
-        Text = "Change Theme",
-        Default = self.ThemeKey,
-        Callback = function(keyCode)
-            self.ThemeKey = keyCode
-        end
-    })
-end
-
--- Keybind setting oluşturma
-function ModernGUI:createKeybindSetting(parent, options)
-    options = options or {}
-    local settingData = {
-        Text = options.Text or "Keybind",
-        Default = options.Default or Enum.KeyCode.F,
-        Callback = options.Callback or function() end
-    }
-    
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 35)
-    container.BackgroundColor3 = ModernTheme.Background
-    container.BorderSizePixel = 0
-    container.Parent = parent
-    
-    local containerCorner = Instance.new("UICorner")
-    containerCorner.CornerRadius = UDim.new(0, 6)
-    containerCorner.Parent = container
-    
-    -- Label
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -70, 1, 0)
-    label.Position = UDim2.new(0, 10, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = settingData.Text
-    label.TextColor3 = ModernTheme.TextPrimary
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 12
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = container
-    
-    -- Keybind button
-    local keybindButton = Instance.new("TextButton")
-    keybindButton.Size = UDim2.new(0, 60, 0, 25)
-    keybindButton.Position = UDim2.new(1, -65, 0.5, -12.5)
-    keybindButton.BackgroundColor3 = ModernTheme.Primary
-    keybindButton.BorderSizePixel = 0
-    keybindButton.Text = settingData.Default.Name
-    keybindButton.TextColor3 = ModernTheme.Background
-    keybindButton.Font = Enum.Font.GothamBold
-    keybindButton.TextSize = 10
-    keybindButton.Parent = container
-    
-    local keyCorner = Instance.new("UICorner")
-    keyCorner.CornerRadius = UDim.new(0, 4)
-    keyCorner.Parent = keybindButton
-    
-    local currentKey = settingData.Default
-    local isBinding = false
-    
-    keybindButton.MouseButton1Click:Connect(function()
-        if not isBinding then
-            isBinding = true
-            keybindButton.Text = "..."
-            keybindButton.BackgroundColor3 = ModernTheme.Warning
-        end
-    end)
-    
-    -- Global keybind listener
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if isBinding and not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard then
-            currentKey = input.KeyCode
-            keybindButton.Text = currentKey.Name
-            keybindButton.BackgroundColor3 = ModernTheme.Primary
-            isBinding = false
-            settingData.Callback(currentKey)
-        end
-    end)
-    
-    return container
 end
 
 function ModernGUI:_addModernHoverEffect(button, icon, title, isActive)
