@@ -76,10 +76,10 @@ function GuiFramework:createWindow(options)
         Title = options.Title or "Window",
         Size = options.Size or UDim2.new(0, 500, 0, 400),
         Position = options.Position or UDim2.new(0.5, -250, 0.5, -200),
-        Resizable = options.Resizable or true,
-        Minimizable = options.Minimizable or true,
-        Closable = options.Closable or true,
-        Draggable = options.Draggable or true
+        Resizable = options.Resizable ~= false,
+        Minimizable = options.Minimizable ~= false,
+        Closable = options.Closable ~= false,
+        Draggable = options.Draggable ~= false
     }
     
     -- Ana window frame
@@ -87,7 +87,7 @@ function GuiFramework:createWindow(options)
     window.Name = "Window_" .. windowData.Title
     window.Size = windowData.Size
     window.Position = windowData.Position
-    window.BackgroundColor3 = self.Theme.Background
+    window.BackgroundColor3 = self.Theme and self.Theme.Background or Color3.fromRGB(25, 25, 40)
     window.BorderSizePixel = 0
     window.Parent = self.ScreenGui
     
@@ -104,7 +104,7 @@ function GuiFramework:createWindow(options)
     titleBar.Name = "TitleBar"
     titleBar.Size = UDim2.new(1, 0, 0, 40)
     titleBar.Position = UDim2.new(0, 0, 0, 0)
-    titleBar.BackgroundColor3 = self.Theme.Primary
+    titleBar.BackgroundColor3 = self.Theme and self.Theme.Primary or Color3.fromRGB(0, 212, 255)
     titleBar.BorderSizePixel = 0
     titleBar.Parent = window
     
@@ -119,7 +119,7 @@ function GuiFramework:createWindow(options)
     titleLabel.Position = UDim2.new(0, 10, 0, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Text = windowData.Title
-    titleLabel.TextColor3 = self.Theme.Text
+    titleLabel.TextColor3 = self.Theme and self.Theme.Text or Color3.fromRGB(255, 255, 255)
     titleLabel.TextScaled = true
     titleLabel.Font = FrameworkSettings.DefaultFont
     titleLabel.Parent = titleBar
@@ -147,7 +147,7 @@ function GuiFramework:createWindow(options)
     content.BackgroundTransparency = 1
     content.BorderSizePixel = 0
     content.ScrollBarThickness = 8
-    content.ScrollBarImageColor3 = self.Theme.Primary
+    content.ScrollBarImageColor3 = self.Theme and self.Theme.Primary or Color3.fromRGB(0, 212, 255)
     content.Parent = window
     
     -- Layout
