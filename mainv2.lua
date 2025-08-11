@@ -62,17 +62,22 @@ function ModernGUI.new(title)
     self.IsVisible = true
     self.CurrentTab = nil
     
-    -- Initialize keybinds
-    self.ToggleKey = Enum.KeyCode.Insert
-    self.CloseKey = Enum.KeyCode.Escape
-    self.ThemeKey = Enum.KeyCode.F3
-    
     -- Ana ScreenGui
     self.ScreenGui = Instance.new("ScreenGui")
     self.ScreenGui.Name = "ModernGUI_" .. self.Title
     self.ScreenGui.Parent = PlayerGui
     self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     self.ScreenGui.ResetOnSpawn = false
+    
+    -- Global kapatma tuşu (RightShift)
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
+            pcall(function()
+                self.ScreenGui.Enabled = false
+                -- Notification göstermeden kapat
+            end)
+        end
+    end)
     
     -- Bildirim container
     self:_createNotificationSystem()
@@ -104,9 +109,6 @@ function ModernGUI:createMainWindow()
     -- Top bar (title + controls)
     local topBar = self:_createTopBar(window)
     
-    -- Settings area (sağ üstte)
-    local settingsArea = self:_createSettingsArea(window)
-    
     -- Draggable
     self:_makeDraggable(window, topBar)
     
@@ -118,7 +120,6 @@ function ModernGUI:createMainWindow()
         Sidebar = sidebar,
         Content = contentArea,
         TopBar = topBar,
-        Settings = settingsArea,
         Tabs = {},
         CurrentTab = nil
     }
