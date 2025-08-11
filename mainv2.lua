@@ -1,5 +1,5 @@
--- MODERN ROBLOX GUI FRAMEWORK - AURELIUS STYLE
--- Gelişmiş, modern tasarımlı GUI Framework
+-- DÜZELTED MODERN ROBLOX GUI FRAMEWORK - AURELIUS STYLE
+-- Hataları giderilmiş, tam çalışan versiyon
 
 local ModernGUI = {}
 ModernGUI.__index = ModernGUI
@@ -14,22 +14,22 @@ local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- Modern Theme
+-- Modern Theme (Aurelius benzeri)
 local ModernTheme = {
-    -- Ana renkler (Türkuaz tema)
+    -- Ana renkler (Türkuaz/Teal tema)
     Primary = Color3.fromRGB(64, 224, 208),        -- Turquoise
     Secondary = Color3.fromRGB(72, 201, 176),      -- Medium turquoise
     Accent = Color3.fromRGB(26, 188, 156),         -- Emerald
     
     -- Arka plan renkleri
-    Background = Color3.fromRGB(23, 23, 23),       -- Dark
-    Surface = Color3.fromRGB(35, 35, 35),          -- Darker
-    SurfaceLight = Color3.fromRGB(45, 45, 45),     -- Medium dark
+    Background = Color3.fromRGB(20, 20, 30),       -- Very dark blue
+    Surface = Color3.fromRGB(30, 30, 45),          -- Dark blue
+    SurfaceLight = Color3.fromRGB(40, 40, 60),     -- Medium dark blue
     
     -- Metin renkleri
     TextPrimary = Color3.fromRGB(255, 255, 255),   -- White
-    TextSecondary = Color3.fromRGB(180, 180, 180), -- Light gray
-    TextMuted = Color3.fromRGB(120, 120, 120),     -- Gray
+    TextSecondary = Color3.fromRGB(180, 180, 190), -- Light gray
+    TextMuted = Color3.fromRGB(120, 120, 140),     -- Gray
     
     -- Durum renkleri
     Success = Color3.fromRGB(46, 204, 113),        -- Green
@@ -40,7 +40,7 @@ local ModernTheme = {
     -- Efekt renkleri
     Shadow = Color3.fromRGB(0, 0, 0),
     Glow = Color3.fromRGB(64, 224, 208),
-    Border = Color3.fromRGB(60, 60, 60)
+    Border = Color3.fromRGB(50, 50, 70)
 }
 
 -- Animation Settings
@@ -79,15 +79,15 @@ end
 function ModernGUI:createMainWindow()
     local window = Instance.new("Frame")
     window.Name = "MainWindow"
-    window.Size = UDim2.new(0, 800, 0, 600)
-    window.Position = UDim2.new(0.5, -400, 0.5, -300)
+    window.Size = UDim2.new(0, 900, 0, 650)
+    window.Position = UDim2.new(0.5, -450, 0.5, -325)
     window.BackgroundColor3 = ModernTheme.Background
     window.BorderSizePixel = 0
     window.Parent = self.ScreenGui
     
     -- Corner radius
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = window
     
     -- Glow effect
@@ -121,69 +121,76 @@ function ModernGUI:createMainWindow()
     return windowObj
 end
 
--- Sidebar oluşturma
+-- Sidebar oluşturma (Sol menü)
 function ModernGUI:_createSidebar(parent)
     local sidebar = Instance.new("Frame")
     sidebar.Name = "Sidebar"
-    sidebar.Size = UDim2.new(0, 220, 1, -50)
-    sidebar.Position = UDim2.new(0, 0, 0, 50)
+    sidebar.Size = UDim2.new(0, 240, 1, -40)
+    sidebar.Position = UDim2.new(0, 0, 0, 40)
     sidebar.BackgroundColor3 = ModernTheme.Surface
     sidebar.BorderSizePixel = 0
     sidebar.Parent = parent
     
     -- Corner
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = sidebar
     
     -- Logo/Title area
     local logoArea = Instance.new("Frame")
-    logoArea.Size = UDim2.new(1, 0, 0, 80)
+    logoArea.Size = UDim2.new(1, 0, 0, 70)
     logoArea.BackgroundColor3 = ModernTheme.Primary
     logoArea.BorderSizePixel = 0
     logoArea.Parent = sidebar
     
     local logoCorner = Instance.new("UICorner")
-    logoCorner.CornerRadius = UDim.new(0, 12)
+    logoCorner.CornerRadius = UDim.new(0, 10)
     logoCorner.Parent = logoArea
     
     -- Logo text
     local logoText = Instance.new("TextLabel")
-    logoText.Size = UDim2.new(1, -20, 1, 0)
-    logoText.Position = UDim2.new(0, 10, 0, 0)
+    logoText.Size = UDim2.new(1, -20, 0.6, 0)
+    logoText.Position = UDim2.new(0, 10, 0, 5)
     logoText.BackgroundTransparency = 1
     logoText.Text = self.Title:upper()
     logoText.TextColor3 = ModernTheme.Background
     logoText.Font = Enum.Font.GothamBold
-    logoText.TextSize = 18
+    logoText.TextSize = 20
     logoText.TextXAlignment = Enum.TextXAlignment.Left
     logoText.Parent = logoArea
     
     -- Version label
     local versionLabel = Instance.new("TextLabel")
-    versionLabel.Size = UDim2.new(0, 60, 0, 20)
-    versionLabel.Position = UDim2.new(1, -70, 0, 5)
+    versionLabel.Size = UDim2.new(1, -20, 0.4, 0)
+    versionLabel.Position = UDim2.new(0, 10, 0.6, 0)
     versionLabel.BackgroundTransparency = 1
     versionLabel.Text = "v1.0.0"
     versionLabel.TextColor3 = ModernTheme.Background
     versionLabel.Font = Enum.Font.Gotham
     versionLabel.TextSize = 12
     versionLabel.TextTransparency = 0.3
+    versionLabel.TextXAlignment = Enum.TextXAlignment.Left
     versionLabel.Parent = logoArea
     
     -- Navigation container
     local navContainer = Instance.new("ScrollingFrame")
-    navContainer.Size = UDim2.new(1, 0, 1, -90)
-    navContainer.Position = UDim2.new(0, 0, 0, 85)
+    navContainer.Size = UDim2.new(1, 0, 1, -80)
+    navContainer.Position = UDim2.new(0, 0, 0, 75)
     navContainer.BackgroundTransparency = 1
     navContainer.BorderSizePixel = 0
     navContainer.ScrollBarThickness = 0
+    navContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
     navContainer.Parent = sidebar
     
     local navLayout = Instance.new("UIListLayout")
     navLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    navLayout.Padding = UDim.new(0, 2)
+    navLayout.Padding = UDim.new(0, 5)
     navLayout.Parent = navContainer
+    
+    -- Auto resize canvas
+    navLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        navContainer.CanvasSize = UDim2.new(0, 0, 0, navLayout.AbsoluteContentSize.Y + 10)
+    end)
     
     return {
         Frame = sidebar,
@@ -197,14 +204,14 @@ end
 function ModernGUI:_createContentArea(parent)
     local contentArea = Instance.new("Frame")
     contentArea.Name = "ContentArea"
-    contentArea.Size = UDim2.new(1, -240, 1, -70)
-    contentArea.Position = UDim2.new(0, 230, 0, 60)
+    contentArea.Size = UDim2.new(1, -260, 1, -60)
+    contentArea.Position = UDim2.new(0, 250, 0, 50)
     contentArea.BackgroundColor3 = ModernTheme.SurfaceLight
     contentArea.BorderSizePixel = 0
     contentArea.Parent = parent
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = contentArea
     
     -- Content scroll frame
@@ -213,14 +220,20 @@ function ModernGUI:_createContentArea(parent)
     scrollFrame.Position = UDim2.new(0, 10, 0, 10)
     scrollFrame.BackgroundTransparency = 1
     scrollFrame.BorderSizePixel = 0
-    scrollFrame.ScrollBarThickness = 8
+    scrollFrame.ScrollBarThickness = 6
     scrollFrame.ScrollBarImageColor3 = ModernTheme.Primary
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
     scrollFrame.Parent = contentArea
     
     local contentLayout = Instance.new("UIListLayout")
     contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    contentLayout.Padding = UDim.new(0, 15)
+    contentLayout.Padding = UDim.new(0, 10)
     contentLayout.Parent = scrollFrame
+    
+    -- Auto resize canvas
+    contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        scrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentLayout.AbsoluteContentSize.Y + 20)
+    end)
     
     return {
         Frame = contentArea,
@@ -233,21 +246,21 @@ end
 function ModernGUI:_createTopBar(parent)
     local topBar = Instance.new("Frame")
     topBar.Name = "TopBar"
-    topBar.Size = UDim2.new(1, 0, 0, 45)
+    topBar.Size = UDim2.new(1, 0, 0, 35)
     topBar.BackgroundColor3 = ModernTheme.Background
     topBar.BorderSizePixel = 0
     topBar.Parent = parent
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = topBar
     
     -- Title
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, -150, 1, 0)
-    titleLabel.Position = UDim2.new(0, 20, 0, 0)
+    titleLabel.Size = UDim2.new(1, -100, 1, 0)
+    titleLabel.Position = UDim2.new(0, 15, 0, 0)
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = ""
+    titleLabel.Text = "Home"
     titleLabel.TextColor3 = ModernTheme.TextPrimary
     titleLabel.Font = Enum.Font.GothamSemibold
     titleLabel.TextSize = 16
@@ -256,8 +269,8 @@ function ModernGUI:_createTopBar(parent)
     
     -- Control buttons
     local controlsFrame = Instance.new("Frame")
-    controlsFrame.Size = UDim2.new(0, 120, 0, 30)
-    controlsFrame.Position = UDim2.new(1, -130, 0.5, -15)
+    controlsFrame.Size = UDim2.new(0, 80, 0, 25)
+    controlsFrame.Position = UDim2.new(1, -90, 0.5, -12.5)
     controlsFrame.BackgroundTransparency = 1
     controlsFrame.Parent = topBar
     
@@ -284,7 +297,7 @@ function ModernGUI:_createTopBar(parent)
     }
 end
 
--- Tab oluşturma (sidebar'da)
+-- Tab oluşturma (sidebar'da) - DÜZELTİLMİŞ
 function ModernGUI:createTab(window, options)
     options = options or {}
     local tabData = {
@@ -297,10 +310,11 @@ function ModernGUI:createTab(window, options)
     local tabButton = Instance.new("TextButton")
     tabButton.Size = UDim2.new(1, -10, 0, 45)
     tabButton.Position = UDim2.new(0, 5, 0, 0)
-    tabButton.BackgroundColor3 = tabData.Active and ModernTheme.Primary or Color3.fromRGB(0,0,0,0)
+    tabButton.BackgroundColor3 = tabData.Active and ModernTheme.Primary or Color3.fromRGB(0, 0, 0)
     tabButton.BackgroundTransparency = tabData.Active and 0 or 1
     tabButton.BorderSizePixel = 0
     tabButton.Text = ""
+    tabButton.AutoButtonColor = false
     tabButton.Parent = window.Sidebar.Container
     
     local buttonCorner = Instance.new("UICorner")
@@ -315,7 +329,7 @@ function ModernGUI:createTab(window, options)
     iconLabel.Text = tabData.Icon
     iconLabel.TextColor3 = tabData.Active and ModernTheme.Background or ModernTheme.TextSecondary
     iconLabel.Font = Enum.Font.Gotham
-    iconLabel.TextSize = 18
+    iconLabel.TextSize = 16
     iconLabel.Parent = tabButton
     
     -- Title
@@ -339,7 +353,7 @@ function ModernGUI:createTab(window, options)
     
     local contentLayout = Instance.new("UIListLayout")
     contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    contentLayout.Padding = UDim.new(0, 15)
+    contentLayout.Padding = UDim.new(0, 10)
     contentLayout.Parent = tabContent
     
     -- Click event
@@ -363,7 +377,7 @@ function ModernGUI:createTab(window, options)
     
     -- İlk tab'ı aktif yap
     if #window.Tabs == 1 then
-        window.Content.Frame.Parent.TopBar.Title.Text = tabData.Title
+        window.TopBar.Title.Text = tabData.Title
     end
     
     return tabObj
@@ -375,8 +389,8 @@ function ModernGUI:createButton(parent, options)
     local buttonData = {
         Text = options.Text or "Button",
         Icon = options.Icon or "",
-        Style = options.Style or "Primary", -- Primary, Secondary, Success, Warning, Error
-        Size = options.Size or UDim2.new(0, 200, 0, 40),
+        Style = options.Style or "Primary",
+        Size = options.Size or UDim2.new(1, 0, 0, 40),
         Callback = options.Callback or function() end
     }
     
@@ -385,28 +399,18 @@ function ModernGUI:createButton(parent, options)
     button.BackgroundColor3 = self:_getButtonColor(buttonData.Style)
     button.BorderSizePixel = 0
     button.Text = ""
+    button.AutoButtonColor = false
     button.Parent = parent
     
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = button
     
-    -- Gradient
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 230, 230))
-    }
-    gradient.Transparency = NumberSequence.new{
-        NumberSequenceKeypoint.new(0, 0.95),
-        NumberSequenceKeypoint.new(1, 0.9)
-    }
-    gradient.Parent = button
-    
     -- Icon (if provided)
+    local iconLabel
     if buttonData.Icon ~= "" then
-        local iconLabel = Instance.new("TextLabel")
-        iconLabel.Size = UDim2.new(0, 25, 1, 0)
+        iconLabel = Instance.new("TextLabel")
+        iconLabel.Size = UDim2.new(0, 20, 1, 0)
         iconLabel.Position = UDim2.new(0, 15, 0, 0)
         iconLabel.BackgroundTransparency = 1
         iconLabel.Text = buttonData.Icon
@@ -418,8 +422,8 @@ function ModernGUI:createButton(parent, options)
     
     -- Text
     local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, buttonData.Icon ~= "" and -45 or -30, 1, 0)
-    textLabel.Position = UDim2.new(0, buttonData.Icon ~= "" and 40 or 15, 0, 0)
+    textLabel.Size = UDim2.new(1, buttonData.Icon ~= "" and -40 or -30, 1, 0)
+    textLabel.Position = UDim2.new(0, buttonData.Icon ~= "" and 35 or 15, 0, 0)
     textLabel.BackgroundTransparency = 1
     textLabel.Text = buttonData.Text
     textLabel.TextColor3 = ModernTheme.TextPrimary
@@ -450,24 +454,18 @@ function ModernGUI:createToggle(parent, options)
     }
     
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 50)
-    container.BackgroundTransparency = 1
+    container.Size = UDim2.new(1, 0, 0, 45)
+    container.BackgroundColor3 = ModernTheme.Surface
+    container.BorderSizePixel = 0
     container.Parent = parent
-    
-    -- Background
-    local background = Instance.new("Frame")
-    background.Size = UDim2.new(1, 0, 1, 0)
-    background.BackgroundColor3 = ModernTheme.Surface
-    background.BorderSizePixel = 0
-    background.Parent = container
     
     local bgCorner = Instance.new("UICorner")
     bgCorner.CornerRadius = UDim.new(0, 8)
-    bgCorner.Parent = background
+    bgCorner.Parent = container
     
     -- Text
     local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, -80, 1, 0)
+    textLabel.Size = UDim2.new(1, -70, 1, 0)
     textLabel.Position = UDim2.new(0, 15, 0, 0)
     textLabel.BackgroundTransparency = 1
     textLabel.Text = toggleData.Text
@@ -475,15 +473,15 @@ function ModernGUI:createToggle(parent, options)
     textLabel.Font = Enum.Font.GothamSemibold
     textLabel.TextSize = 14
     textLabel.TextXAlignment = Enum.TextXAlignment.Left
-    textLabel.Parent = background
+    textLabel.Parent = container
     
     -- Toggle switch
     local toggleSwitch = Instance.new("Frame")
-    toggleSwitch.Size = UDim2.new(0, 50, 0, 25)
-    toggleSwitch.Position = UDim2.new(1, -60, 0.5, -12.5)
+    toggleSwitch.Size = UDim2.new(0, 50, 0, 24)
+    toggleSwitch.Position = UDim2.new(1, -60, 0.5, -12)
     toggleSwitch.BackgroundColor3 = toggleData.Default and ModernTheme.Primary or ModernTheme.Border
     toggleSwitch.BorderSizePixel = 0
-    toggleSwitch.Parent = background
+    toggleSwitch.Parent = container
     
     local switchCorner = Instance.new("UICorner")
     switchCorner.CornerRadius = UDim.new(1, 0)
@@ -491,8 +489,8 @@ function ModernGUI:createToggle(parent, options)
     
     -- Toggle knob
     local toggleKnob = Instance.new("Frame")
-    toggleKnob.Size = UDim2.new(0, 21, 0, 21)
-    toggleKnob.Position = toggleData.Default and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)
+    toggleKnob.Size = UDim2.new(0, 20, 0, 20)
+    toggleKnob.Position = toggleData.Default and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
     toggleKnob.BackgroundColor3 = ModernTheme.TextPrimary
     toggleKnob.BorderSizePixel = 0
     toggleKnob.Parent = toggleSwitch
@@ -508,7 +506,7 @@ function ModernGUI:createToggle(parent, options)
     clickDetector.Size = UDim2.new(1, 0, 1, 0)
     clickDetector.BackgroundTransparency = 1
     clickDetector.Text = ""
-    clickDetector.Parent = background
+    clickDetector.Parent = container
     
     clickDetector.MouseButton1Click:Connect(function()
         isToggled = not isToggled
@@ -517,7 +515,7 @@ function ModernGUI:createToggle(parent, options)
     end)
     
     -- Hover effect
-    self:_addHoverEffect(background)
+    self:_addHoverEffect(container)
     
     container.GetValue = function() return isToggled end
     container.SetValue = function(value)
@@ -540,50 +538,44 @@ function ModernGUI:createSlider(parent, options)
     }
     
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 70)
-    container.BackgroundTransparency = 1
+    container.Size = UDim2.new(1, 0, 0, 65)
+    container.BackgroundColor3 = ModernTheme.Surface
+    container.BorderSizePixel = 0
     container.Parent = parent
-    
-    -- Background
-    local background = Instance.new("Frame")
-    background.Size = UDim2.new(1, 0, 1, 0)
-    background.BackgroundColor3 = ModernTheme.Surface
-    background.BorderSizePixel = 0
-    background.Parent = container
     
     local bgCorner = Instance.new("UICorner")
     bgCorner.CornerRadius = UDim.new(0, 8)
-    bgCorner.Parent = background
+    bgCorner.Parent = container
     
     -- Title and value
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, -80, 0, 25)
-    titleLabel.Position = UDim2.new(0, 15, 0, 10)
+    titleLabel.Size = UDim2.new(1, -60, 0, 25)
+    titleLabel.Position = UDim2.new(0, 15, 0, 8)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Text = sliderData.Text
     titleLabel.TextColor3 = ModernTheme.TextPrimary
     titleLabel.Font = Enum.Font.GothamSemibold
     titleLabel.TextSize = 14
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Parent = background
+    titleLabel.Parent = container
     
     local valueLabel = Instance.new("TextLabel")
-    valueLabel.Size = UDim2.new(0, 60, 0, 25)
-    valueLabel.Position = UDim2.new(1, -70, 0, 10)
+    valueLabel.Size = UDim2.new(0, 50, 0, 25)
+    valueLabel.Position = UDim2.new(1, -60, 0, 8)
     valueLabel.BackgroundTransparency = 1
     valueLabel.Text = tostring(sliderData.Default)
     valueLabel.TextColor3 = ModernTheme.Primary
     valueLabel.Font = Enum.Font.GothamBold
     valueLabel.TextSize = 14
-    valueLabel.Parent = background
+    valueLabel.Parent = container
     
     -- Slider track
     local sliderTrack = Instance.new("Frame")
     sliderTrack.Size = UDim2.new(1, -30, 0, 6)
-    sliderTrack.Position = UDim2.new(0, 15, 0, 45)
+    sliderTrack.Position = UDim2.new(0, 15, 0, 40)
     sliderTrack.BackgroundColor3 = ModernTheme.Border
     sliderTrack.BorderSizePixel = 0
-    sliderTrack.Parent = background
+    sliderTrack.Parent = container
     
     local trackCorner = Instance.new("UICorner")
     trackCorner.CornerRadius = UDim.new(1, 0)
@@ -602,8 +594,8 @@ function ModernGUI:createSlider(parent, options)
     
     -- Slider knob
     local sliderKnob = Instance.new("Frame")
-    sliderKnob.Size = UDim2.new(0, 18, 0, 18)
-    sliderKnob.Position = UDim2.new((sliderData.Default - sliderData.Min) / (sliderData.Max - sliderData.Min), -9, 0.5, -9)
+    sliderKnob.Size = UDim2.new(0, 16, 0, 16)
+    sliderKnob.Position = UDim2.new((sliderData.Default - sliderData.Min) / (sliderData.Max - sliderData.Min), -8, 0.5, -8)
     sliderKnob.BackgroundColor3 = ModernTheme.Primary
     sliderKnob.BorderSizePixel = 0
     sliderKnob.Parent = sliderTrack
@@ -611,9 +603,6 @@ function ModernGUI:createSlider(parent, options)
     local knobCorner = Instance.new("UICorner")
     knobCorner.CornerRadius = UDim.new(1, 0)
     knobCorner.Parent = sliderKnob
-    
-    -- Glow effect for knob
-    self:_addGlowEffect(sliderKnob, ModernTheme.Primary)
     
     local currentValue = sliderData.Default
     local dragging = false
@@ -623,9 +612,8 @@ function ModernGUI:createSlider(parent, options)
         local relativeX = math.clamp((input.Position.X - sliderTrack.AbsolutePosition.X) / sliderTrack.AbsoluteSize.X, 0, 1)
         currentValue = math.floor(sliderData.Min + (sliderData.Max - sliderData.Min) * relativeX)
         
-        local tweenInfo = TweenInfo.new(AnimationConfig.HoverSpeed, AnimationConfig.Style, AnimationConfig.Direction)
-        TweenService:Create(sliderFill, tweenInfo, {Size = UDim2.new(relativeX, 0, 1, 0)}):Play()
-        TweenService:Create(sliderKnob, tweenInfo, {Position = UDim2.new(relativeX, -9, 0.5, -9)}):Play()
+        sliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
+        sliderKnob.Position = UDim2.new(relativeX, -8, 0.5, -8)
         
         valueLabel.Text = tostring(currentValue)
         sliderData.Callback(currentValue)
@@ -655,7 +643,7 @@ function ModernGUI:createSlider(parent, options)
         currentValue = math.clamp(value, sliderData.Min, sliderData.Max)
         local relativeX = (currentValue - sliderData.Min) / (sliderData.Max - sliderData.Min)
         sliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
-        sliderKnob.Position = UDim2.new(relativeX, -9, 0.5, -9)
+        sliderKnob.Position = UDim2.new(relativeX, -8, 0.5, -8)
         valueLabel.Text = tostring(currentValue)
     end
     
@@ -668,19 +656,19 @@ function ModernGUI:createNotification(options)
     local notifData = {
         Title = options.Title or "Notification",
         Text = options.Text or "",
-        Type = options.Type or "Info", -- Info, Success, Warning, Error
+        Type = options.Type or "Info",
         Duration = options.Duration or 4
     }
     
     local notification = Instance.new("Frame")
-    notification.Size = UDim2.new(0, 350, 0, 90)
-    notification.Position = UDim2.new(1, 370, 0, 20 + #self.Notifications * 100)
+    notification.Size = UDim2.new(0, 320, 0, 80)
+    notification.Position = UDim2.new(1, 340, 0, 20 + #self.Notifications * 90)
     notification.BackgroundColor3 = ModernTheme.Surface
     notification.BorderSizePixel = 0
     notification.Parent = self.ScreenGui
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = notification
     
     -- Colored left border
@@ -691,48 +679,36 @@ function ModernGUI:createNotification(options)
     border.Parent = notification
     
     local borderCorner = Instance.new("UICorner")
-    borderCorner.CornerRadius = UDim.new(0, 12)
+    borderCorner.CornerRadius = UDim.new(0, 10)
     borderCorner.Parent = border
     
     -- Icon
-    local iconFrame = Instance.new("Frame")
-    iconFrame.Size = UDim2.new(0, 50, 1, 0)
-    iconFrame.Position = UDim2.new(0, 15, 0, 0)
-    iconFrame.BackgroundTransparency = 1
-    iconFrame.Parent = notification
-    
     local iconLabel = Instance.new("TextLabel")
-    iconLabel.Size = UDim2.new(1, 0, 1, 0)
+    iconLabel.Size = UDim2.new(0, 40, 1, 0)
+    iconLabel.Position = UDim2.new(0, 15, 0, 0)
     iconLabel.BackgroundTransparency = 1
     iconLabel.Text = self:_getNotificationIcon(notifData.Type)
     iconLabel.TextColor3 = self:_getNotificationColor(notifData.Type)
     iconLabel.Font = Enum.Font.GothamBold
-    iconLabel.TextSize = 20
-    iconLabel.Parent = iconFrame
-    
-    -- Content
-    local contentFrame = Instance.new("Frame")
-    contentFrame.Size = UDim2.new(1, -110, 1, -20)
-    contentFrame.Position = UDim2.new(0, 70, 0, 10)
-    contentFrame.BackgroundTransparency = 1
-    contentFrame.Parent = notification
+    iconLabel.TextSize = 18
+    iconLabel.Parent = notification
     
     -- Title
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 0, 25)
+    titleLabel.Size = UDim2.new(1, -100, 0, 25)
+    titleLabel.Position = UDim2.new(0, 60, 0, 10)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Text = notifData.Title
     titleLabel.TextColor3 = ModernTheme.TextPrimary
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.TextSize = 14
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.TextYAlignment = Enum.TextYAlignment.Top
-    titleLabel.Parent = contentFrame
+    titleLabel.Parent = notification
     
     -- Text
     local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, 0, 1, -30)
-    textLabel.Position = UDim2.new(0, 0, 0, 25)
+    textLabel.Size = UDim2.new(1, -100, 0, 40)
+    textLabel.Position = UDim2.new(0, 60, 0, 30)
     textLabel.BackgroundTransparency = 1
     textLabel.Text = notifData.Text
     textLabel.TextColor3 = ModernTheme.TextSecondary
@@ -741,38 +717,27 @@ function ModernGUI:createNotification(options)
     textLabel.TextXAlignment = Enum.TextXAlignment.Left
     textLabel.TextYAlignment = Enum.TextYAlignment.Top
     textLabel.TextWrapped = true
-    textLabel.Parent = contentFrame
+    textLabel.Parent = notification
     
     -- Close button
     local closeButton = Instance.new("TextButton")
-    closeButton.Size = UDim2.new(0, 30, 0, 30)
-    closeButton.Position = UDim2.new(1, -35, 0, 5)
+    closeButton.Size = UDim2.new(0, 25, 0, 25)
+    closeButton.Position = UDim2.new(1, -30, 0, 5)
     closeButton.BackgroundTransparency = 1
     closeButton.Text = "×"
     closeButton.TextColor3 = ModernTheme.TextMuted
     closeButton.Font = Enum.Font.GothamBold
-    closeButton.TextSize = 18
+    closeButton.TextSize = 16
     closeButton.Parent = notification
     
     closeButton.MouseButton1Click:Connect(function()
         self:_removeNotification(notification)
     end)
     
-    -- Hover effect for close button
-    closeButton.MouseEnter:Connect(function()
-        closeButton.TextColor3 = ModernTheme.Error
-    end)
-    closeButton.MouseLeave:Connect(function()
-        closeButton.TextColor3 = ModernTheme.TextMuted
-    end)
-    
-    -- Add glow effect
-    self:_addGlowEffect(notification)
-    
     -- Slide in animation
     local slideInTween = TweenService:Create(notification, 
         TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-        {Position = UDim2.new(1, -360, 0, 20 + #self.Notifications * 100)}
+        {Position = UDim2.new(1, -330, 0, 20 + #self.Notifications * 90)}
     )
     slideInTween:Play()
     
@@ -780,8 +745,10 @@ function ModernGUI:createNotification(options)
     
     -- Auto remove
     if notifData.Duration > 0 then
-        task.wait(notifData.Duration)
-        self:_removeNotification(notification)
+        task.spawn(function()
+            task.wait(notifData.Duration)
+            self:_removeNotification(notification)
+        end)
     end
     
     return notification
@@ -790,32 +757,26 @@ end
 -- Yardımcı fonksiyonlar
 
 function ModernGUI:_createNotificationSystem()
-    -- Bildirim sistemi için konteyner oluştur
-    self.NotificationContainer = Instance.new("Frame")
-    self.NotificationContainer.Name = "NotificationContainer"
-    self.NotificationContainer.Size = UDim2.new(1, 0, 1, 0)
-    self.NotificationContainer.BackgroundTransparency = 1
-    self.NotificationContainer.Parent = self.ScreenGui
+    -- Bildirim sistemi konteyner
 end
 
 function ModernGUI:_addGlowEffect(element, color)
-    local glow = Instance.new("ImageLabel")
+    local glow = Instance.new("Frame")
     glow.Name = "Glow"
-    glow.Size = UDim2.new(1, 20, 1, 20)
-    glow.Position = UDim2.new(0, -10, 0, -10)
-    glow.BackgroundTransparency = 1
-    glow.Image = "rbxasset://textures/ui/Glow.png"
-    glow.ImageColor3 = color or ModernTheme.Glow
-    glow.ImageTransparency = 0.8
+    glow.Size = UDim2.new(1, 6, 1, 6)
+    glow.Position = UDim2.new(0, -3, 0, -3)
+    glow.BackgroundColor3 = color or ModernTheme.Primary
+    glow.BackgroundTransparency = 0.9
+    glow.BorderSizePixel = 0
     glow.ZIndex = element.ZIndex - 1
     glow.Parent = element.Parent
+    
+    local glowCorner = Instance.new("UICorner")
+    glowCorner.CornerRadius = UDim.new(0, 13)
+    glowCorner.Parent = glow
 end
 
 function ModernGUI:_addModernHoverEffect(button, icon, title, isActive)
-    local originalBgColor = button.BackgroundColor3
-    local originalIconColor = icon.TextColor3
-    local originalTitleColor = title.TextColor3
-    
     button.MouseEnter:Connect(function()
         if not isActive then
             local tweenInfo = TweenInfo.new(AnimationConfig.HoverSpeed, AnimationConfig.Style, AnimationConfig.Direction)
@@ -832,11 +793,10 @@ function ModernGUI:_addModernHoverEffect(button, icon, title, isActive)
         if not isActive then
             local tweenInfo = TweenInfo.new(AnimationConfig.HoverSpeed, AnimationConfig.Style, AnimationConfig.Direction)
             TweenService:Create(button, tweenInfo, {
-                BackgroundColor3 = originalBgColor,
                 BackgroundTransparency = 1
             }):Play()
-            TweenService:Create(icon, tweenInfo, {TextColor3 = originalIconColor}):Play()
-            TweenService:Create(title, tweenInfo, {TextColor3 = originalTitleColor}):Play()
+            TweenService:Create(icon, tweenInfo, {TextColor3 = ModernTheme.TextSecondary}):Play()
+            TweenService:Create(title, tweenInfo, {TextColor3 = ModernTheme.TextSecondary}):Play()
         end
     end)
 end
@@ -885,8 +845,8 @@ function ModernGUI:_animateWindowIn(window)
     
     local tweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     TweenService:Create(window, tweenInfo, {
-        Size = UDim2.new(0, 800, 0, 600),
-        Position = UDim2.new(0.5, -400, 0.5, -300)
+        Size = UDim2.new(0, 900, 0, 650),
+        Position = UDim2.new(0.5, -450, 0.5, -325)
     }):Play()
 end
 
@@ -917,7 +877,7 @@ function ModernGUI:_animateToggle(toggleSwitch, toggleKnob, isToggled)
     }):Play()
     
     TweenService:Create(toggleKnob, tweenInfo, {
-        Position = isToggled and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)
+        Position = isToggled and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
     }):Play()
 end
 
@@ -937,7 +897,6 @@ function ModernGUI:_switchTab(window, tabName)
         else
             -- Deactivate tab
             tab.Content.Visible = false
-            tab.Button.BackgroundColor3 = Color3.fromRGB(0,0,0)
             tab.Button.BackgroundTransparency = 1
             tab.Icon.TextColor3 = ModernTheme.TextSecondary
             tab.Title.TextColor3 = ModernTheme.TextSecondary
@@ -976,13 +935,13 @@ end
 
 function ModernGUI:_createControlButton(parent, text, color, callback)
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 30, 0, 30)
+    button.Size = UDim2.new(0, 25, 0, 25)
     button.BackgroundColor3 = color
     button.BorderSizePixel = 0
     button.Text = text
     button.TextColor3 = ModernTheme.TextPrimary
     button.Font = Enum.Font.GothamBold
-    button.TextSize = 16
+    button.TextSize = 14
     button.Parent = parent
     
     local corner = Instance.new("UICorner")
@@ -1002,7 +961,7 @@ function ModernGUI:_minimizeWindow(window)
     if not isMinimized then
         window:SetAttribute("OriginalSize", window.Size)
         local tweenInfo = TweenInfo.new(AnimationConfig.Speed, AnimationConfig.Style, AnimationConfig.Direction)
-        TweenService:Create(window, tweenInfo, {Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 45)}):Play()
+        TweenService:Create(window, tweenInfo, {Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 35)}):Play()
     else
         local tweenInfo = TweenInfo.new(AnimationConfig.Speed, AnimationConfig.Style, AnimationConfig.Direction)
         TweenService:Create(window, tweenInfo, {Size = originalSize}):Play()
@@ -1032,7 +991,7 @@ function ModernGUI:_removeNotification(notification)
         
         local slideOutTween = TweenService:Create(notification,
             TweenInfo.new(AnimationConfig.Speed, AnimationConfig.Style, AnimationConfig.Direction),
-            {Position = UDim2.new(1, 370, 0, notification.Position.Y.Offset)}
+            {Position = UDim2.new(1, 340, 0, notification.Position.Y.Offset)}
         )
         
         slideOutTween.Completed:Connect(function()
@@ -1042,7 +1001,7 @@ function ModernGUI:_removeNotification(notification)
             for i, notif in ipairs(self.Notifications) do
                 TweenService:Create(notif,
                     TweenInfo.new(AnimationConfig.Speed, AnimationConfig.Style, AnimationConfig.Direction),
-                    {Position = UDim2.new(1, -360, 0, 20 + (i-1) * 100)}
+                    {Position = UDim2.new(1, -330, 0, 20 + (i-1) * 90)}
                 ):Play()
             end
         end)
@@ -1092,94 +1051,5 @@ function ModernGUI:destroy()
     self.Windows = {}
     self.Notifications = {}
 end
-
--- Modern GUI kullanım örneği
---[[
-KULLANIM ÖRNEĞİ:
-
--- Framework'ü başlat
-local GUI = ModernGUI.new("AURELIUS")
-
--- Ana window oluştur
-local mainWindow = GUI:createMainWindow()
-
--- Home tab oluştur
-local homeTab = GUI:createTab(mainWindow, {
-    Title = "Home",
-    Icon = "🏠",
-    Active = true
-})
-
--- Local Player tab oluştur
-local playerTab = GUI:createTab(mainWindow, {
-    Title = "Local Player",
-    Icon = "👤"
-})
-
--- Executor tab oluştur
-local executorTab = GUI:createTab(mainWindow, {
-    Title = "Executor",
-    Icon = "💻"
-})
-
--- Scripts tab oluştur
-local scriptsTab = GUI:createTab(mainWindow, {
-    Title = "Scripts",
-    Icon = "📜"
-})
-
--- Gear tab oluştur
-local gearTab = GUI:createTab(mainWindow, {
-    Title = "Gear",
-    Icon = "⚙️"
-})
-
--- Players tab oluştur
-local playersTab = GUI:createTab(mainWindow, {
-    Title = "Players",
-    Icon = "👥"
-})
-
--- Elementler ekle
-GUI:createButton(homeTab.Content, {
-    Text = "Test Button",
-    Icon = "🔥",
-    Style = "Primary",
-    Callback = function()
-        GUI:createNotification({
-            Title = "Success!",
-            Text = "Button clicked successfully!",
-            Type = "Success"
-        })
-    end
-})
-
-GUI:createToggle(homeTab.Content, {
-    Text = "Enable Feature",
-    Default = false,
-    Callback = function(value)
-        print("Feature toggled:", value)
-    end
-})
-
-GUI:createSlider(homeTab.Content, {
-    Text = "Speed",
-    Min = 0,
-    Max = 100,
-    Default = 16,
-    Callback = function(value)
-        print("Speed set to:", value)
-    end
-})
-
--- Hoş geldin bildirimi
-GUI:createNotification({
-    Title = "Welcome!",
-    Text = "Modern GUI Framework loaded successfully!",
-    Type = "Success",
-    Duration = 5
-})
-
-]]
 
 return ModernGUI
