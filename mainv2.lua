@@ -90,8 +90,7 @@ function ModernGUI:createMainWindow()
     corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = window
     
-    -- Glow effect
-    self:_addGlowEffect(window)
+    -- Glow effect kaldırıldı (şeffaf turkuaz arka plan sorunu)
     
     -- Sol sidebar (navigation)
     local sidebar = self:_createSidebar(window)
@@ -761,19 +760,8 @@ function ModernGUI:_createNotificationSystem()
 end
 
 function ModernGUI:_addGlowEffect(element, color)
-    local glow = Instance.new("Frame")
-    glow.Name = "Glow"
-    glow.Size = UDim2.new(1, 6, 1, 6)
-    glow.Position = UDim2.new(0, -3, 0, -3)
-    glow.BackgroundColor3 = color or ModernTheme.Primary
-    glow.BackgroundTransparency = 0.9
-    glow.BorderSizePixel = 0
-    glow.ZIndex = element.ZIndex - 1
-    glow.Parent = element.Parent
-    
-    local glowCorner = Instance.new("UICorner")
-    glowCorner.CornerRadius = UDim.new(0, 13)
-    glowCorner.Parent = glow
+    -- Glow efekti kaldırıldı (şeffaf turkuaz arka plan sorunu çözümü)
+    -- Bu fonksiyon artık hiçbir şey yapmıyor
 end
 
 function ModernGUI:_addModernHoverEffect(button, icon, title, isActive)
