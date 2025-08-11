@@ -75,7 +75,7 @@ function ModernGUI.new(title)
     return self
 end
 
--- Ana window oluşturma (Aurelius benzeri)
+    -- Ana window oluştur (Aurelius benzeri)
 function ModernGUI:createMainWindow()
     local window = Instance.new("Frame")
     window.Name = "MainWindow"
@@ -90,8 +90,6 @@ function ModernGUI:createMainWindow()
     corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = window
     
-    -- Glow effect kaldırıldı (şeffaf turkuaz arka plan sorunu)
-    
     -- Sol sidebar (navigation)
     local sidebar = self:_createSidebar(window)
     
@@ -100,6 +98,9 @@ function ModernGUI:createMainWindow()
     
     -- Top bar (title + controls)
     local topBar = self:_createTopBar(window)
+    
+    -- Settings area (sağ üstte)
+    local settingsArea = self:_createSettingsArea(window)
     
     -- Draggable
     self:_makeDraggable(window, topBar)
@@ -112,6 +113,7 @@ function ModernGUI:createMainWindow()
         Sidebar = sidebar,
         Content = contentArea,
         TopBar = topBar,
+        Settings = settingsArea,
         Tabs = {},
         CurrentTab = nil
     }
@@ -759,9 +761,191 @@ function ModernGUI:_createNotificationSystem()
     -- Bildirim sistemi konteyner
 end
 
-function ModernGUI:_addGlowEffect(element, color)
-    -- Glow efekti kaldırıldı (şeffaf turkuaz arka plan sorunu çözümü)
-    -- Bu fonksiyon artık hiçbir şey yapmıyor
+-- Settings area oluşturma (keybind ayarları için)
+function ModernGUI:_createSettingsArea(parent)
+    local settingsButton = Instance.new("TextButton")
+    settingsButton.Size = UDim2.new(0, 30, 0, 30)
+    settingsButton.Position = UDim2.new(1, -40, 0, 5)
+    settingsButton.BackgroundColor3 = ModernTheme.Surface
+    settingsButton.BorderSizePixel = 0
+    settingsButton.Text = "⚙️"
+    settingsButton.TextColor3 = ModernTheme.TextPrimary
+    settingsButton.Font = Enum.Font.Gotham
+    settingsButton.TextSize = 16
+    settingsButton.Parent = parent
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 8)
+    buttonCorner.Parent = settingsButton
+    
+    -- Settings panel (başlangıçta gizli)
+    local settingsPanel = Instance.new("Frame")
+    settingsPanel.Size = UDim2.new(0, 250, 0, 200)
+    settingsPanel.Position = UDim2.new(1, -260, 0, 40)
+    settingsPanel.BackgroundColor3 = ModernTheme.Surface
+    settingsPanel.BorderSizePixel = 0
+    settingsPanel.Visible = false
+    settingsPanel.Parent = parent
+    
+    local panelCorner = Instance.new("UICorner")
+    panelCorner.CornerRadius = UDim.new(0, 10)
+    panelCorner.Parent = settingsPanel
+    
+    -- Settings title
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, 0, 0, 40)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = "⚙️ Settings"
+    titleLabel.TextColor3 = ModernTheme.Primary
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 16
+    titleLabel.Parent = settingsPanel
+    
+    -- Settings content
+    local settingsContent = Instance.new("ScrollingFrame")
+    settingsContent.Size = UDim2.new(1, -20, 1, -50)
+    settingsContent.Position = UDim2.new(0, 10, 0, 40)
+    settingsContent.BackgroundTransparency = 1
+    settingsContent.BorderSizePixel = 0
+    settingsContent.ScrollBarThickness = 4
+    settingsContent.ScrollBarImageColor3 = ModernTheme.Primary
+    settingsContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+    settingsContent.Parent = settingsPanel
+    
+    local settingsLayout = Instance.new("UIListLayout")
+    settingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    settingsLayout.Padding = UDim.new(0, 8)
+    settingsLayout.Parent = settingsContent
+    
+    -- Auto resize canvas
+    settingsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        settingsContent.CanvasSize = UDim2.new(0, 0, 0, settingsLayout.AbsoluteContentSize.Y + 10)
+    end)
+    
+    -- Toggle settings panel
+    settingsButton.MouseButton1Click:Connect(function()
+        settingsPanel.Visible = not settingsPanel.Visible
+        
+        -- Animate panel
+        if settingsPanel.Visible then
+            settingsPanel.Size = UDim2.new(0, 0, 0, 0)
+            local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+            TweenService:Create(settingsPanel, tweenInfo, {Size = UDim2.new(0, 250, 0, 200)}):Play()
+        end
+    end)
+    
+    -- Add keybind settings
+    self:_addKeybindSettings(settingsContent)
+    
+    self:_addButtonHoverEffect(settingsButton)
+    
+    return {
+        Button = settingsButton,
+        Panel = settingsPanel,
+        Content = settingsContent
+    }
+end
+
+-- Keybind ayarları ekleme
+function ModernGUI:_addKeybindSettings(parent)
+    -- Toggle GUI keybind
+    self:createKeybindSetting(parent, {
+        Text = "Toggle GUI",
+        Default = Enum.KeyCode.Insert,
+        Callback = function(keyCode)
+            self.ToggleKey = keyCode
+        end
+    })
+    
+    -- Close GUI keybind  
+    self:createKeybindSetting(parent, {
+        Text = "Close GUI",
+        Default = Enum.KeyCode.Escape,
+        Callback = function(keyCode)
+            self.CloseKey = keyCode
+        end
+    })
+    
+    -- Change theme keybind
+    self:createKeybindSetting(parent, {
+        Text = "Change Theme",
+        Default = Enum.KeyCode.F3,
+        Callback = function(keyCode)
+            self.ThemeKey = keyCode
+        end
+    })
+end
+
+-- Keybind setting oluşturma
+function ModernGUI:createKeybindSetting(parent, options)
+    options = options or {}
+    local settingData = {
+        Text = options.Text or "Keybind",
+        Default = options.Default or Enum.KeyCode.F,
+        Callback = options.Callback or function() end
+    }
+    
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 35)
+    container.BackgroundColor3 = ModernTheme.Background
+    container.BorderSizePixel = 0
+    container.Parent = parent
+    
+    local containerCorner = Instance.new("UICorner")
+    containerCorner.CornerRadius = UDim.new(0, 6)
+    containerCorner.Parent = container
+    
+    -- Label
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -70, 1, 0)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = settingData.Text
+    label.TextColor3 = ModernTheme.TextPrimary
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = container
+    
+    -- Keybind button
+    local keybindButton = Instance.new("TextButton")
+    keybindButton.Size = UDim2.new(0, 60, 0, 25)
+    keybindButton.Position = UDim2.new(1, -65, 0.5, -12.5)
+    keybindButton.BackgroundColor3 = ModernTheme.Primary
+    keybindButton.BorderSizePixel = 0
+    keybindButton.Text = settingData.Default.Name
+    keybindButton.TextColor3 = ModernTheme.Background
+    keybindButton.Font = Enum.Font.GothamBold
+    keybindButton.TextSize = 10
+    keybindButton.Parent = container
+    
+    local keyCorner = Instance.new("UICorner")
+    keyCorner.CornerRadius = UDim.new(0, 4)
+    keyCorner.Parent = keybindButton
+    
+    local currentKey = settingData.Default
+    local isBinding = false
+    
+    keybindButton.MouseButton1Click:Connect(function()
+        if not isBinding then
+            isBinding = true
+            keybindButton.Text = "..."
+            keybindButton.BackgroundColor3 = ModernTheme.Warning
+        end
+    end)
+    
+    -- Global keybind listener
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if isBinding and not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard then
+            currentKey = input.KeyCode
+            keybindButton.Text = currentKey.Name
+            keybindButton.BackgroundColor3 = ModernTheme.Primary
+            isBinding = false
+            settingData.Callback(currentKey)
+        end
+    end)
+    
+    return container
 end
 
 function ModernGUI:_addModernHoverEffect(button, icon, title, isActive)
