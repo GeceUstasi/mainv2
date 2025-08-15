@@ -1,6 +1,6 @@
 -- VoidX Framework | Modern Roblox UI Library
 -- Version: 1.0.0 BETA
--- Created by: VoidX Team
+-- Fixed Version
 
 local VoidX = {}
 VoidX.__index = VoidX
@@ -78,10 +78,12 @@ end
 
 local function CreateInstance(className, properties, parent)
     local instance = Instance.new(className)
-    for prop, value in pairs(properties) do
+    for prop, value in pairs(properties or {}) do
         instance[prop] = value
     end
-    instance.Parent = parent
+    if parent then
+        instance.Parent = parent
+    end
     return instance
 end
 
@@ -144,7 +146,8 @@ function VoidX:CreateWindow(options)
         Name = "VoidX_" .. HttpService:GenerateGUID(false),
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
         ResetOnSpawn = false
-    }, CoreGui)
+    })
+    screenGui.Parent = CoreGui
     
     -- Main Frame
     local mainFrame = CreateInstance("Frame", {
@@ -154,7 +157,8 @@ function VoidX:CreateWindow(options)
         BackgroundColor3 = window.Theme.Background,
         BorderSizePixel = 0,
         ClipsDescendants = true
-    }, screenGui)
+    })
+    mainFrame.Parent = screenGui
     
     CreateInstance("UICorner", {
         CornerRadius = UDim.new(0, 20)
@@ -187,7 +191,8 @@ function VoidX:CreateWindow(options)
         Position = UDim2.new(0, 0, 0, 0),
         BackgroundColor3 = window.Theme.Secondary,
         BorderSizePixel = 0
-    }, mainFrame)
+    })
+    sidebar.Parent = mainFrame
     
     CreateInstance("UICorner", {
         CornerRadius = UDim.new(0, 20)
@@ -199,7 +204,8 @@ function VoidX:CreateWindow(options)
         Size = UDim2.new(1, -30, 0, 80),
         Position = UDim2.new(0, 15, 0, 15),
         BackgroundTransparency = 1
-    }, sidebar)
+    })
+    logoSection.Parent = sidebar
     
     local logoText = CreateInstance("TextLabel", {
         Name = "Logo",
@@ -210,7 +216,8 @@ function VoidX:CreateWindow(options)
         TextColor3 = window.Theme.Text,
         TextScaled = true,
         Font = Config.FontBold
-    }, logoSection)
+    })
+    logoText.Parent = logoSection
     
     -- Add gradient to logo
     CreateInstance("UIGradient", {
@@ -230,7 +237,8 @@ function VoidX:CreateWindow(options)
         TextColor3 = window.Theme.TextDim,
         TextSize = 11,
         Font = Config.Font
-    }, logoSection)
+    })
+    versionLabel.Parent = logoSection
     
     -- Tab Container
     local tabContainer = CreateInstance("ScrollingFrame", {
@@ -240,8 +248,10 @@ function VoidX:CreateWindow(options)
         BackgroundTransparency = 1,
         ScrollBarThickness = 4,
         ScrollBarImageColor3 = window.Theme.Accent,
+        BorderSizePixel = 0,
         CanvasSize = UDim2.new(0, 0, 0, 0)
-    }, sidebar)
+    })
+    tabContainer.Parent = sidebar
     
     CreateInstance("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
@@ -254,7 +264,8 @@ function VoidX:CreateWindow(options)
         Size = UDim2.new(1, -260, 1, -20),
         Position = UDim2.new(0, 260, 0, 10),
         BackgroundTransparency = 1
-    }, mainFrame)
+    })
+    contentArea.Parent = mainFrame
     
     -- Theme Selector
     local themeSelector = CreateInstance("Frame", {
@@ -263,7 +274,8 @@ function VoidX:CreateWindow(options)
         Position = UDim2.new(0, 15, 1, -70),
         BackgroundColor3 = window.Theme.Background,
         BackgroundTransparency = 0.3
-    }, sidebar)
+    })
+    themeSelector.Parent = sidebar
     
     CreateInstance("UICorner", {
         CornerRadius = UDim.new(0, 10)
@@ -278,13 +290,15 @@ function VoidX:CreateWindow(options)
         TextSize = 11,
         Font = Config.Font,
         TextXAlignment = Enum.TextXAlignment.Left
-    }, themeSelector)
+    })
+    themeLabel.Parent = themeSelector
     
     local themeOptions = CreateInstance("Frame", {
         Size = UDim2.new(1, -10, 0, 30),
         Position = UDim2.new(0, 5, 0, 25),
         BackgroundTransparency = 1
-    }, themeSelector)
+    })
+    themeOptions.Parent = themeSelector
     
     CreateInstance("UIListLayout", {
         FillDirection = Enum.FillDirection.Horizontal,
@@ -293,11 +307,15 @@ function VoidX:CreateWindow(options)
     }, themeOptions)
     
     -- Create theme dots
+    local themeIndex = 0
     for themeName, themeColors in pairs(Config.Themes) do
+        themeIndex = themeIndex + 1
         local themeDot = CreateInstance("Frame", {
             Size = UDim2.new(0, 24, 0, 24),
-            BackgroundColor3 = themeColors.Accent
-        }, themeOptions)
+            BackgroundColor3 = themeColors.Accent,
+            LayoutOrder = themeIndex
+        })
+        themeDot.Parent = themeOptions
         
         CreateInstance("UICorner", {
             CornerRadius = UDim.new(1, 0)
@@ -307,7 +325,8 @@ function VoidX:CreateWindow(options)
             Size = UDim2.new(1, 0, 1, 0),
             BackgroundTransparency = 1,
             Text = ""
-        }, themeDot)
+        })
+        dotButton.Parent = themeDot
         
         dotButton.MouseButton1Click:Connect(function()
             window:ChangeTheme(themeName)
@@ -329,13 +348,15 @@ function VoidX:CreateWindow(options)
             Size = UDim2.new(1, 0, 0, 45),
             BackgroundColor3 = window.Theme.Background,
             BackgroundTransparency = 1
-        }, tabContainer)
+        })
+        tabButton.Parent = tabContainer
         
         CreateInstance("UICorner", {
             CornerRadius = UDim.new(0, 12)
         }, tabButton)
         
         local tabLabel = CreateInstance("TextLabel", {
+            Name = "TabLabel",
             Size = UDim2.new(1, -50, 1, 0),
             Position = UDim2.new(0, 45, 0, 0),
             BackgroundTransparency = 1,
@@ -344,7 +365,8 @@ function VoidX:CreateWindow(options)
             TextSize = 14,
             Font = Config.Font,
             TextXAlignment = Enum.TextXAlignment.Left
-        }, tabButton)
+        })
+        tabLabel.Parent = tabButton
         
         -- Tab Icon (if provided)
         if tabIcon then
@@ -356,14 +378,16 @@ function VoidX:CreateWindow(options)
                 TextColor3 = window.Theme.TextDim,
                 TextSize = 20,
                 Font = Config.Font
-            }, tabButton)
+            })
+            iconLabel.Parent = tabButton
         end
         
         local tabButtonClick = CreateInstance("TextButton", {
             Size = UDim2.new(1, 0, 1, 0),
             BackgroundTransparency = 1,
             Text = ""
-        }, tabButton)
+        })
+        tabButtonClick.Parent = tabButton
         
         -- Tab Content Frame
         local tabContent = CreateInstance("ScrollingFrame", {
@@ -374,19 +398,24 @@ function VoidX:CreateWindow(options)
             Visible = false,
             ScrollBarThickness = 4,
             ScrollBarImageColor3 = window.Theme.Accent,
+            BorderSizePixel = 0,
             CanvasSize = UDim2.new(0, 0, 0, 0)
-        }, contentArea)
+        })
+        tabContent.Parent = contentArea
         
         local contentLayout = CreateInstance("UIListLayout", {
             SortOrder = Enum.SortOrder.LayoutOrder,
             Padding = UDim.new(0, 15)
-        }, tabContent)
+        })
+        contentLayout.Parent = tabContent
         
         -- Tab Header
         local tabHeader = CreateInstance("Frame", {
             Size = UDim2.new(1, 0, 0, 80),
-            BackgroundTransparency = 1
-        }, tabContent)
+            BackgroundTransparency = 1,
+            LayoutOrder = 0
+        })
+        tabHeader.Parent = tabContent
         
         local tabTitle = CreateInstance("TextLabel", {
             Size = UDim2.new(1, 0, 0, 35),
@@ -396,7 +425,8 @@ function VoidX:CreateWindow(options)
             TextSize = 32,
             Font = Config.FontBold,
             TextXAlignment = Enum.TextXAlignment.Left
-        }, tabHeader)
+        })
+        tabTitle.Parent = tabHeader
         
         local tabDescription = CreateInstance("TextLabel", {
             Size = UDim2.new(1, 0, 0, 20),
@@ -407,7 +437,8 @@ function VoidX:CreateWindow(options)
             TextSize = 14,
             Font = Config.Font,
             TextXAlignment = Enum.TextXAlignment.Left
-        }, tabHeader)
+        })
+        tabDescription.Parent = tabHeader
         
         -- Auto-resize content
         contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -446,8 +477,10 @@ function VoidX:CreateWindow(options)
             local toggleFrame = CreateInstance("Frame", {
                 Size = UDim2.new(1, 0, 0, 50),
                 BackgroundColor3 = window.Theme.Background,
-                BackgroundTransparency = 0.7
-            }, tabContent)
+                BackgroundTransparency = 0.7,
+                LayoutOrder = 1
+            })
+            toggleFrame.Parent = tabContent
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(0, 12)
@@ -468,13 +501,15 @@ function VoidX:CreateWindow(options)
                 TextSize = 14,
                 Font = Config.Font,
                 TextXAlignment = Enum.TextXAlignment.Left
-            }, toggleFrame)
+            })
+            toggleLabel.Parent = toggleFrame
             
             local toggleSwitch = CreateInstance("Frame", {
                 Size = UDim2.new(0, 48, 0, 26),
                 Position = UDim2.new(1, -60, 0.5, -13),
                 BackgroundColor3 = window.Theme.Border
-            }, toggleFrame)
+            })
+            toggleSwitch.Parent = toggleFrame
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(1, 0)
@@ -484,7 +519,8 @@ function VoidX:CreateWindow(options)
                 Size = UDim2.new(0, 20, 0, 20),
                 Position = UDim2.new(0, 3, 0, 3),
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            }, toggleSwitch)
+            })
+            toggleCircle.Parent = toggleSwitch
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(1, 0)
@@ -494,7 +530,8 @@ function VoidX:CreateWindow(options)
                 Size = UDim2.new(1, 0, 1, 0),
                 BackgroundTransparency = 1,
                 Text = ""
-            }, toggleFrame)
+            })
+            toggleButton.Parent = toggleFrame
             
             local toggled = toggleDefault
             
@@ -531,6 +568,9 @@ function VoidX:CreateWindow(options)
                 SetValue = function(value)
                     toggled = value
                     updateToggle()
+                end,
+                GetValue = function()
+                    return toggled
                 end
             }
         end
@@ -548,8 +588,10 @@ function VoidX:CreateWindow(options)
             local sliderFrame = CreateInstance("Frame", {
                 Size = UDim2.new(1, 0, 0, 70),
                 BackgroundColor3 = window.Theme.Background,
-                BackgroundTransparency = 0.7
-            }, tabContent)
+                BackgroundTransparency = 0.7,
+                LayoutOrder = 2
+            })
+            sliderFrame.Parent = tabContent
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(0, 12)
@@ -565,7 +607,8 @@ function VoidX:CreateWindow(options)
                 Size = UDim2.new(1, -40, 0, 30),
                 Position = UDim2.new(0, 20, 0, 10),
                 BackgroundTransparency = 1
-            }, sliderFrame)
+            })
+            sliderHeader.Parent = sliderFrame
             
             local sliderLabel = CreateInstance("TextLabel", {
                 Size = UDim2.new(0.7, 0, 1, 0),
@@ -575,7 +618,8 @@ function VoidX:CreateWindow(options)
                 TextSize = 14,
                 Font = Config.Font,
                 TextXAlignment = Enum.TextXAlignment.Left
-            }, sliderHeader)
+            })
+            sliderLabel.Parent = sliderHeader
             
             local sliderValue = CreateInstance("TextLabel", {
                 Size = UDim2.new(0.3, 0, 1, 0),
@@ -586,13 +630,15 @@ function VoidX:CreateWindow(options)
                 TextSize = 14,
                 Font = Config.FontBold,
                 TextXAlignment = Enum.TextXAlignment.Right
-            }, sliderHeader)
+            })
+            sliderValue.Parent = sliderHeader
             
             local sliderBar = CreateInstance("Frame", {
                 Size = UDim2.new(1, -40, 0, 6),
                 Position = UDim2.new(0, 20, 0, 45),
                 BackgroundColor3 = window.Theme.Border
-            }, sliderFrame)
+            })
+            sliderBar.Parent = sliderFrame
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(1, 0)
@@ -601,7 +647,8 @@ function VoidX:CreateWindow(options)
             local sliderFill = CreateInstance("Frame", {
                 Size = UDim2.new(0, 0, 1, 0),
                 BackgroundColor3 = window.Theme.Accent
-            }, sliderBar)
+            })
+            sliderFill.Parent = sliderBar
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(1, 0)
@@ -617,19 +664,14 @@ function VoidX:CreateWindow(options)
             
             local sliderThumb = CreateInstance("Frame", {
                 Size = UDim2.new(0, 18, 0, 18),
-                Position = UDim2.new(0, -9, 0.5, -9),
+                Position = UDim2.new(1, -9, 0.5, -9),
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                 ZIndex = 2
-            }, sliderFill)
+            })
+            sliderThumb.Parent = sliderFill
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(1, 0)
-            }, sliderThumb)
-            
-            CreateInstance("DropShadow", {
-                Color = Color3.fromRGB(0, 0, 0),
-                Opacity = 0.3,
-                Radius = 10
             }, sliderThumb)
             
             local dragging = false
@@ -674,6 +716,70 @@ function VoidX:CreateWindow(options)
             return {
                 SetValue = function(value)
                     updateSlider(value)
+                end,
+                GetValue = function()
+                    return currentValue
+                end
+            }
+        end
+        
+        -- Button Element
+        function tab:CreateButton(options)
+            options = options or {}
+            local buttonName = options.Name or "Button"
+            local buttonCallback = options.Callback or function() end
+            
+            local buttonFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 45),
+                BackgroundTransparency = 1,
+                LayoutOrder = 3
+            })
+            buttonFrame.Parent = tabContent
+            
+            local button = CreateInstance("TextButton", {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundColor3 = window.Theme.Accent,
+                BorderSizePixel = 0,
+                Text = buttonName,
+                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextSize = 14,
+                Font = Config.FontBold
+            })
+            button.Parent = buttonFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 10)
+            }, button)
+            
+            CreateInstance("UIGradient", {
+                Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0, window.Theme.Accent),
+                    ColorSequenceKeypoint.new(1, window.Theme.AccentDark)
+                },
+                Rotation = 135
+            }, button)
+            
+            button.MouseButton1Click:Connect(function()
+                buttonCallback()
+            end)
+            
+            button.MouseEnter:Connect(function()
+                CreateTween(button, {
+                    Size = UDim2.new(1, 10, 1, 0),
+                    Position = UDim2.new(0, -5, 0, 0)
+                }, 0.2)
+            end)
+            
+            button.MouseLeave:Connect(function()
+                CreateTween(button, {
+                    Size = UDim2.new(1, 0, 1, 0),
+                    Position = UDim2.new(0, 0, 0, 0)
+                }, 0.2)
+            end)
+            
+            return {
+                SetText = function(text)
+                    button.Text = text
                 end
             }
         end
@@ -690,8 +796,10 @@ function VoidX:CreateWindow(options)
                 Size = UDim2.new(1, 0, 0, 50),
                 BackgroundColor3 = window.Theme.Background,
                 BackgroundTransparency = 0.7,
-                ClipsDescendants = true
-            }, tabContent)
+                ClipsDescendants = true,
+                LayoutOrder = 4
+            })
+            dropdownFrame.Parent = tabContent
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(0, 12)
@@ -707,7 +815,8 @@ function VoidX:CreateWindow(options)
                 Size = UDim2.new(1, 0, 0, 50),
                 BackgroundTransparency = 1,
                 Text = ""
-            }, dropdownFrame)
+            })
+            dropdownButton.Parent = dropdownFrame
             
             local dropdownLabel = CreateInstance("TextLabel", {
                 Size = UDim2.new(1, -60, 1, 0),
@@ -718,7 +827,8 @@ function VoidX:CreateWindow(options)
                 TextSize = 14,
                 Font = Config.Font,
                 TextXAlignment = Enum.TextXAlignment.Left
-            }, dropdownButton)
+            })
+            dropdownLabel.Parent = dropdownButton
             
             local dropdownArrow = CreateInstance("TextLabel", {
                 Size = UDim2.new(0, 20, 0, 20),
@@ -728,19 +838,22 @@ function VoidX:CreateWindow(options)
                 TextColor3 = window.Theme.TextDim,
                 TextSize = 12,
                 Font = Config.Font
-            }, dropdownButton)
+            })
+            dropdownArrow.Parent = dropdownButton
             
-            local dropdownList = CreateInstance("Frame", {
+            local dropdownListFrame = CreateInstance("Frame", {
                 Size = UDim2.new(1, 0, 0, 0),
                 Position = UDim2.new(0, 0, 0, 50),
                 BackgroundColor3 = window.Theme.Secondary,
                 BorderSizePixel = 0,
                 Visible = true
-            }, dropdownFrame)
+            })
+            dropdownListFrame.Parent = dropdownFrame
             
             local dropdownListLayout = CreateInstance("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder
-            }, dropdownList)
+            })
+            dropdownListLayout.Parent = dropdownListFrame
             
             local isOpen = false
             local currentOption = dropdownDefault
@@ -755,7 +868,8 @@ function VoidX:CreateWindow(options)
                     TextColor3 = window.Theme.TextDim,
                     TextSize = 13,
                     Font = Config.Font
-                }, dropdownList)
+                })
+                optionButton.Parent = dropdownListFrame
                 
                 optionButton.MouseEnter:Connect(function()
                     CreateTween(optionButton, {
@@ -810,96 +924,6 @@ function VoidX:CreateWindow(options)
             }
         end
         
-        -- Button Element
-        function tab:CreateButton(options)
-            options = options or {}
-            local buttonName = options.Name or "Button"
-            local buttonCallback = options.Callback or function() end
-            
-            local buttonFrame = CreateInstance("Frame", {
-                Size = UDim2.new(1, 0, 0, 45),
-                BackgroundTransparency = 1
-            }, tabContent)
-            
-            local button = CreateInstance("TextButton", {
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundColor3 = window.Theme.Accent,
-                BorderSizePixel = 0,
-                Text = buttonName,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 14,
-                Font = Config.FontBold
-            }, buttonFrame)
-            
-            CreateInstance("UICorner", {
-                CornerRadius = UDim.new(0, 10)
-            }, button)
-            
-            CreateInstance("UIGradient", {
-                Color = ColorSequence.new{
-                    ColorSequenceKeypoint.new(0, window.Theme.Accent),
-                    ColorSequenceKeypoint.new(1, window.Theme.AccentDark)
-                },
-                Rotation = 135
-            }, button)
-            
-            -- Ripple effect container
-            local rippleContainer = CreateInstance("Frame", {
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundTransparency = 1,
-                ClipsDescendants = true
-            }, button)
-            
-            CreateInstance("UICorner", {
-                CornerRadius = UDim.new(0, 10)
-            }, rippleContainer)
-            
-            button.MouseButton1Click:Connect(function()
-                -- Create ripple effect
-                local ripple = CreateInstance("Frame", {
-                    Size = UDim2.new(0, 0, 0, 0),
-                    Position = UDim2.new(0.5, 0, 0.5, 0),
-                    AnchorPoint = Vector2.new(0.5, 0.5),
-                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                    BackgroundTransparency = 0.7
-                }, rippleContainer)
-                
-                CreateInstance("UICorner", {
-                    CornerRadius = UDim.new(1, 0)
-                }, ripple)
-                
-                CreateTween(ripple, {
-                    Size = UDim2.new(2, 0, 2, 0),
-                    BackgroundTransparency = 1
-                }, 0.5)
-                
-                wait(0.5)
-                ripple:Destroy()
-                
-                buttonCallback()
-            end)
-            
-            button.MouseEnter:Connect(function()
-                CreateTween(button, {
-                    Size = UDim2.new(1, 10, 1, 0),
-                    Position = UDim2.new(0, -5, 0, 0)
-                }, 0.2)
-            end)
-            
-            button.MouseLeave:Connect(function()
-                CreateTween(button, {
-                    Size = UDim2.new(1, 0, 1, 0),
-                    Position = UDim2.new(0, 0, 0, 0)
-                }, 0.2)
-            end)
-            
-            return {
-                SetText = function(text)
-                    button.Text = text
-                end
-            }
-        end
-        
         -- Input Element
         function tab:CreateInput(options)
             options = options or {}
@@ -911,8 +935,10 @@ function VoidX:CreateWindow(options)
             local inputFrame = CreateInstance("Frame", {
                 Size = UDim2.new(1, 0, 0, 50),
                 BackgroundColor3 = window.Theme.Background,
-                BackgroundTransparency = 0.7
-            }, tabContent)
+                BackgroundTransparency = 0.7,
+                LayoutOrder = 5
+            })
+            inputFrame.Parent = tabContent
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(0, 12)
@@ -933,7 +959,8 @@ function VoidX:CreateWindow(options)
                 TextSize = 14,
                 Font = Config.Font,
                 TextXAlignment = Enum.TextXAlignment.Left
-            }, inputFrame)
+            })
+            inputLabel.Parent = inputFrame
             
             local inputBox = CreateInstance("TextBox", {
                 Size = UDim2.new(0.6, -20, 0, 30),
@@ -947,7 +974,8 @@ function VoidX:CreateWindow(options)
                 TextSize = 13,
                 Font = Config.Font,
                 ClearTextOnFocus = false
-            }, inputFrame)
+            })
+            inputBox.Parent = inputFrame
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(0, 8)
@@ -981,191 +1009,14 @@ function VoidX:CreateWindow(options)
             }
         end
         
-        -- Keybind Element
-        function tab:CreateKeybind(options)
-            options = options or {}
-            local keybindName = options.Name or "Keybind"
-            local keybindDefault = options.Default or Enum.KeyCode.F
-            local keybindCallback = options.Callback or function() end
-            
-            local keybindFrame = CreateInstance("Frame", {
-                Size = UDim2.new(1, 0, 0, 50),
-                BackgroundColor3 = window.Theme.Background,
-                BackgroundTransparency = 0.7
-            }, tabContent)
-            
-            CreateInstance("UICorner", {
-                CornerRadius = UDim.new(0, 12)
-            }, keybindFrame)
-            
-            CreateInstance("UIStroke", {
-                Color = window.Theme.Border,
-                Thickness = 1,
-                Transparency = 0.7
-            }, keybindFrame)
-            
-            local keybindLabel = CreateInstance("TextLabel", {
-                Size = UDim2.new(1, -100, 1, 0),
-                Position = UDim2.new(0, 20, 0, 0),
-                BackgroundTransparency = 1,
-                Text = keybindName,
-                TextColor3 = window.Theme.Text,
-                TextSize = 14,
-                Font = Config.Font,
-                TextXAlignment = Enum.TextXAlignment.Left
-            }, keybindFrame)
-            
-            local keybindButton = CreateInstance("TextButton", {
-                Size = UDim2.new(0, 70, 0, 30),
-                Position = UDim2.new(1, -85, 0.5, -15),
-                BackgroundColor3 = window.Theme.Secondary,
-                BorderSizePixel = 0,
-                Text = keybindDefault.Name,
-                TextColor3 = window.Theme.Text,
-                TextSize = 13,
-                Font = Config.Font
-            }, keybindFrame)
-            
-            CreateInstance("UICorner", {
-                CornerRadius = UDim.new(0, 8)
-            }, keybindButton)
-            
-            local currentKey = keybindDefault
-            local listening = false
-            
-            keybindButton.MouseButton1Click:Connect(function()
-                listening = true
-                keybindButton.Text = "..."
-                CreateTween(keybindButton, {BackgroundColor3 = window.Theme.Accent})
-            end)
-            
-            UserInputService.InputBegan:Connect(function(input, gameProcessed)
-                if listening and not gameProcessed then
-                    if input.UserInputType == Enum.UserInputType.Keyboard then
-                        currentKey = input.KeyCode
-                        keybindButton.Text = currentKey.Name
-                        listening = false
-                        CreateTween(keybindButton, {BackgroundColor3 = window.Theme.Secondary})
-                    end
-                elseif input.KeyCode == currentKey and not gameProcessed then
-                    keybindCallback()
-                end
-            end)
-            
-            return {
-                SetKey = function(key)
-                    currentKey = key
-                    keybindButton.Text = key.Name
-                end,
-                GetKey = function()
-                    return currentKey
-                end
-            }
-        end
-        
-        -- Color Picker Element
-        function tab:CreateColorPicker(options)
-            options = options or {}
-            local colorName = options.Name or "Color Picker"
-            local colorDefault = options.Default or Color3.fromRGB(255, 255, 255)
-            local colorCallback = options.Callback or function() end
-            
-            local colorFrame = CreateInstance("Frame", {
-                Size = UDim2.new(1, 0, 0, 50),
-                BackgroundColor3 = window.Theme.Background,
-                BackgroundTransparency = 0.7
-            }, tabContent)
-            
-            CreateInstance("UICorner", {
-                CornerRadius = UDim.new(0, 12)
-            }, colorFrame)
-            
-            CreateInstance("UIStroke", {
-                Color = window.Theme.Border,
-                Thickness = 1,
-                Transparency = 0.7
-            }, colorFrame)
-            
-            local colorLabel = CreateInstance("TextLabel", {
-                Size = UDim2.new(1, -60, 1, 0),
-                Position = UDim2.new(0, 20, 0, 0),
-                BackgroundTransparency = 1,
-                Text = colorName,
-                TextColor3 = window.Theme.Text,
-                TextSize = 14,
-                Font = Config.Font,
-                TextXAlignment = Enum.TextXAlignment.Left
-            }, colorFrame)
-            
-            local colorDisplay = CreateInstance("Frame", {
-                Size = UDim2.new(0, 30, 0, 30),
-                Position = UDim2.new(1, -45, 0.5, -15),
-                BackgroundColor3 = colorDefault,
-                BorderSizePixel = 0
-            }, colorFrame)
-            
-            CreateInstance("UICorner", {
-                CornerRadius = UDim.new(0, 8)
-            }, colorDisplay)
-            
-            CreateInstance("UIStroke", {
-                Color = window.Theme.Border,
-                Thickness = 2,
-                Transparency = 0.5
-            }, colorDisplay)
-            
-            local colorButton = CreateInstance("TextButton", {
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundTransparency = 1,
-                Text = ""
-            }, colorDisplay)
-            
-            -- Simple color picker popup (you can expand this)
-            colorButton.MouseButton1Click:Connect(function()
-                -- For now, cycle through preset colors
-                local presetColors = {
-                    Color3.fromRGB(255, 0, 0),
-                    Color3.fromRGB(0, 255, 0),
-                    Color3.fromRGB(0, 0, 255),
-                    Color3.fromRGB(255, 255, 0),
-                    Color3.fromRGB(255, 0, 255),
-                    Color3.fromRGB(0, 255, 255),
-                    Color3.fromRGB(255, 255, 255),
-                    Color3.fromRGB(0, 0, 0)
-                }
-                
-                local currentIndex = 1
-                for i, color in ipairs(presetColors) do
-                    if color == colorDisplay.BackgroundColor3 then
-                        currentIndex = i
-                        break
-                    end
-                end
-                
-                currentIndex = currentIndex % #presetColors + 1
-                local newColor = presetColors[currentIndex]
-                
-                CreateTween(colorDisplay, {BackgroundColor3 = newColor})
-                colorCallback(newColor)
-            end)
-            
-            return {
-                SetColor = function(color)
-                    colorDisplay.BackgroundColor3 = color
-                    colorCallback(color)
-                end,
-                GetColor = function()
-                    return colorDisplay.BackgroundColor3
-                end
-            }
-        end
-        
         -- Label Element
         function tab:CreateLabel(text)
             local labelFrame = CreateInstance("Frame", {
                 Size = UDim2.new(1, 0, 0, 30),
-                BackgroundTransparency = 1
-            }, tabContent)
+                BackgroundTransparency = 1,
+                LayoutOrder = 6
+            })
+            labelFrame.Parent = tabContent
             
             local label = CreateInstance("TextLabel", {
                 Size = UDim2.new(1, 0, 1, 0),
@@ -1175,7 +1026,8 @@ function VoidX:CreateWindow(options)
                 TextSize = 13,
                 Font = Config.Font,
                 TextXAlignment = Enum.TextXAlignment.Left
-            }, labelFrame)
+            })
+            label.Parent = labelFrame
             
             return {
                 SetText = function(newText)
@@ -1188,8 +1040,10 @@ function VoidX:CreateWindow(options)
         function tab:CreateSection(sectionName)
             local sectionFrame = CreateInstance("Frame", {
                 Size = UDim2.new(1, 0, 0, 35),
-                BackgroundTransparency = 1
-            }, tabContent)
+                BackgroundTransparency = 1,
+                LayoutOrder = 7
+            })
+            sectionFrame.Parent = tabContent
             
             local sectionLabel = CreateInstance("TextLabel", {
                 Size = UDim2.new(0.5, 0, 1, 0),
@@ -1199,14 +1053,16 @@ function VoidX:CreateWindow(options)
                 TextSize = 12,
                 Font = Config.FontBold,
                 TextXAlignment = Enum.TextXAlignment.Left
-            }, sectionFrame)
+            })
+            sectionLabel.Parent = sectionFrame
             
             local sectionLine = CreateInstance("Frame", {
                 Size = UDim2.new(0.5, -10, 0, 1),
                 Position = UDim2.new(0.5, 10, 0.5, 0),
                 BackgroundColor3 = window.Theme.Border,
                 BorderSizePixel = 0
-            }, sectionFrame)
+            })
+            sectionLine.Parent = sectionFrame
         end
         
         table.insert(window.Tabs, tab)
@@ -1230,7 +1086,7 @@ function VoidX:CreateWindow(options)
                 BackgroundTransparency = 1,
                 BackgroundColor3 = window.Theme.Background
             })
-            local label = t.Button:FindChildOfClass("TextLabel")
+            local label = t.Button:FindFirstChild("TabLabel")
             if label then
                 CreateTween(label, {TextColor3 = window.Theme.TextDim})
             end
@@ -1242,7 +1098,7 @@ function VoidX:CreateWindow(options)
             BackgroundTransparency = 0.8,
             BackgroundColor3 = window.Theme.Accent
         })
-        local label = tab.Button:FindChildOfClass("TextLabel")
+        local label = tab.Button:FindFirstChild("TabLabel")
         if label then
             CreateTween(label, {TextColor3 = window.Theme.Text})
         end
@@ -1297,7 +1153,8 @@ function VoidX:CreateWindow(options)
             Position = UDim2.new(1, 320, 1, -100),
             BackgroundColor3 = window.Theme.Secondary,
             BorderSizePixel = 0
-        }, screenGui)
+        })
+        notif.Parent = screenGui
         
         CreateInstance("UICorner", {
             CornerRadius = UDim.new(0, 12)
@@ -1318,7 +1175,8 @@ function VoidX:CreateWindow(options)
             TextSize = 16,
             Font = Config.FontBold,
             TextXAlignment = Enum.TextXAlignment.Left
-        }, notif)
+        })
+        notifTitle.Parent = notif
         
         local notifContent = CreateInstance("TextLabel", {
             Size = UDim2.new(1, -20, 0, 30),
@@ -1330,7 +1188,8 @@ function VoidX:CreateWindow(options)
             Font = Config.Font,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextWrapped = true
-        }, notif)
+        })
+        notifContent.Parent = notif
         
         -- Animate in
         CreateTween(notif, {Position = UDim2.new(1, -320, 1, -100)}, 0.5)
