@@ -1,1548 +1,682 @@
---[[
-     _              _             _ _
-    | |  _  _ _ __ (_)_ _  ___ __(_) |_ _  _
-    | |_| || | '  \| | ' \/ _ (_-< |  _| || |
-    |____\_,_|_|_|_|_|_||_\___/__/_|\__|\_, |
-                                        |__/
-	Source:
-        https://raw.githubusercontent.com/icuck/GenesisStudioLibraries/main/Elerium%20Interface%20Library.lua
+-- MODERN ROBLOX GUI FRAMEWORK - AURELIUS STYLE
+-- Gelişmiş, modern tasarımlı GUI Framework
 
-	Version:
-        0.0.1
+local ModernGUI = {}
+ModernGUI.__index = ModernGUI
 
-	Date:
-        October 19th, 2020
+-- Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
-	Author:
-        OminousVibes @ v3rmillion.net / OminousVibes#1234 @ discord.gg
+-- Variables
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
-    Credits:
-        (None Yet)
-
-]]
-
--- [ Initialize ] --
--- Destroy Previous UI's --
-if _G.Luminosity_Loaded and _G.Luminosity then
-    _G.Luminosity:Destroy()
-end
-
--- Set Globals --
-_G.Luminosity_Loaded = true
-_G.Luminosity = nil
-
--- [ Yield ] --
-if not game:IsLoaded() then
-    game.Loaded:Wait()
-end
-
--- // CONSTANTS \\ --
--- [ Services ] --
-local Services = setmetatable({}, {__index = function(Self, Index)
-    local NewService = game:GetService(Index)
-    if NewService then
-        Self[Index] = NewService
-    end
-    return NewService
-end})
-
--- [ LocalPlayer ] --
-local LocalPlayer = Services.Players.LocalPlayer
-
--- // Variables \\ --
--- [ Colors ] --
-local Objects = {}
-
--- [ Other ] --
-local Binds = {}
-
--- // Functions \\ --
-local Utility = {}
-
---[[
-Utility.new(Class: string, Properties: Dictionary, Children: Array)
-    Creates a new object with the Properties
-]]
-function Utility.new(Class, Properties, Children)
-    local NewInstance = Instance.new(Class)
-    for i,v in pairs(Properties or {}) do
-        if i ~= "Parent" then
-            NewInstance[i] = v
-        end
-    end
-    for i,v in ipairs(Children or {}) do
-        if typeof(v) == "Instance" then
-            v.Parent = NewInstance
-        end
-    end
-
-    NewInstance.Parent = Properties.Parent
-    return NewInstance
-end
-
---[[
-Utility.Tween(Object: Instance, TweenInformation: TweenInfo, Goal: Dictionary)
-    Creates a tween
-]]
-function Utility.Tween(Object, TweenInformation, Goal)
-    -- [ Tween ] --
-    local Tween = Services.TweenService:Create(Object, TweenInformation, Goal)
-
-    -- [ Info ] --
-    local Info = {}
-
-    -- Yield --
-	function Info:Yield()
-		Tween:Play()
-		Tween.Completed:Wait(10)
-	end
-
-	return setmetatable(Info, {__index = function(Self, Index)
-		local Value = Tween[Index]
-		return typeof(Value) ~= "function" and Value or function(self, ...)
-			return Tween[Index](Tween, ...)
-		end
-	end})
-end
-
---[[
-Utility:Wait()
-    Yields for a short period of time.
-]]
-function Utility.Wait(Seconds)
-    if Seconds then
-        local StartTime = time()
-        repeat
-            Services.RunService.Heartbeat:Wait(0.1)
-        until time() - StartTime > Seconds
-    else
-        return Services.RunService.Heartbeat:Wait(0.1)
-    end
-end
-
---[[
-Utility.BindKey(Key: KeyCode, Callback: Function, ID: string)
-    Binds a key
-]]
-function Utility.BindKey(Key, Callback, ID)
-    local BindID = ID or Services.HttpService:GenerateGUID(true)
-    Services.ContextActionService:BindAction(BindID, Callback, false, Key)
-    return BindID
-end
-
---[[
-Utility:DraggingEnabled()
-    Allows Dragging for the Frame Provided
-]]
-function Utility.CreateDrag(Frame, Parent, Settings)
-    -- Main --
-    local DragPro = {
-        DragEnabled = true;
-        Dragging = false;
-        Settings = Settings or {
-            TweenDuration = 0.1,
-            TweenStyle = Enum.EasingStyle.Quad
-        }
-    }
-
-    -- Info --
-    local DragInfo = {
-        Parent = Parent or Frame;
-        DragInput = nil;
-        MousePosition = nil;
-        FramePosition = nil;
-    }
-
-    -- Script --
-    local Connections = {}
-
-    function DragPro:Initialize()
-        table.insert(Connections,
-            Frame.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    DragPro.Dragging = true
-                    DragInfo.MousePosition = Input.Position
-                    DragInfo.FramePosition = DragInfo.Parent.Position
-
-                    repeat
-                        Input.Changed:Wait()
-                    until Input.UserInputState == Enum.UserInputState.End
-                    DragPro.Dragging = false
-                end
-            end)
-        )
-
-        table.insert(Connections,
-            Frame.InputChanged:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
-                    DragInfo.DragInput = Input
-                end
-            end)
-        )
-
-        table.insert(Connections,
-            Services.UserInputService.InputChanged:Connect(function(Input)
-                if DragPro.Dragging == true and Input == DragInfo.DragInput then
-                    local PositionChange = Input.Position - DragInfo.MousePosition
-                    Utility.Tween(DragInfo.Parent, TweenInfo.new(DragPro.Settings.TweenDuration, DragPro.Settings.TweenStyle), {Position = UDim2.new(DragInfo.FramePosition.X.Scale, DragInfo.FramePosition.X.Offset + PositionChange.X, DragInfo.FramePosition.Y.Scale, DragInfo.FramePosition.Y.Offset + PositionChange.Y)}):Play()
-                end
-            end)
-        )
-    end
-
-    -- Functions --
-    function DragPro:Destroy()
-        for i,v in ipairs(Connections) do
-            v:Disconnect()
-        end
-    end
-
-    DragPro:Initialize()
-
-    -- Return --
-    return DragPro
-end
-
--- // Main Module \\ --
--- [ Luminosity ] --
-local Luminosity = {
-    ScreenGui = Utility.new("ScreenGui", {
-        DisplayOrder = 5,
-        Name = "Luminosity",
-        Parent = Services.RunService:IsStudio() and LocalPlayer:FindFirstChildOfClass("PlayerGui") or Services.CoreGui,
-        IgnoreGuiInset = true,
-        ResetOnSpawn = false
-    });
-    Settings = {
-        Name = "Template";
-        Debug = false;
-    };
-    ColorScheme = {
-        Primary = Color3.fromRGB(66, 134, 245);
-        Text = Color3.new(255, 255, 255);
-    };
+-- Modern Theme
+local ModernTheme = {
+    -- Ana renkler (Türkuaz tema)
+    Primary = Color3.fromRGB(64, 224, 208),        -- Turquoise
+    Secondary = Color3.fromRGB(72, 201, 176),      -- Medium turquoise
+    Accent = Color3.fromRGB(26, 188, 156),         -- Emerald
+    
+    -- Arka plan renkleri
+    Background = Color3.fromRGB(23, 23, 23),       -- Dark
+    Surface = Color3.fromRGB(35, 35, 35),          -- Darker
+    SurfaceLight = Color3.fromRGB(45, 45, 45),     -- Medium dark
+    
+    -- Metin renkleri
+    TextPrimary = Color3.fromRGB(255, 255, 255),   -- White
+    TextSecondary = Color3.fromRGB(180, 180, 180), -- Light gray
+    TextMuted = Color3.fromRGB(120, 120, 120),     -- Gray
+    
+    -- Durum renkleri
+    Success = Color3.fromRGB(46, 204, 113),        -- Green
+    Warning = Color3.fromRGB(241, 196, 15),        -- Yellow
+    Error = Color3.fromRGB(231, 76, 60),           -- Red
+    Info = Color3.fromRGB(52, 152, 219),           -- Blue
+    
+    -- Efekt renkleri
+    Shadow = Color3.fromRGB(0, 0, 0),
+    Glow = Color3.fromRGB(64, 224, 208),
+    Border = Color3.fromRGB(60, 60, 60)
 }
-_G.Luminosity = Luminosity.ScreenGui
-for i,v in pairs({Name = "Template", Debug = false}) do
-    if Luminosity.Settings[i] == nil then
-        Luminosity.Settings[i] = v
-    end
+
+-- Animation Settings
+local AnimationConfig = {
+    Speed = 0.3,
+    Style = Enum.EasingStyle.Quart,
+    Direction = Enum.EasingDirection.Out,
+    HoverSpeed = 0.2,
+    ClickSpeed = 0.1
+}
+
+-- Framework başlatma
+function ModernGUI.new(title)
+    local self = setmetatable({}, ModernGUI)
+    
+    self.Title = title or "Modern GUI"
+    self.Notifications = {}
+    self.Windows = {}
+    self.IsVisible = true
+    self.CurrentTab = nil
+    
+    -- Ana ScreenGui
+    self.ScreenGui = Instance.new("ScreenGui")
+    self.ScreenGui.Name = "ModernGUI_" .. self.Title
+    self.ScreenGui.Parent = PlayerGui
+    self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    self.ScreenGui.ResetOnSpawn = false
+    
+    -- Bildirim container
+    self:_createNotificationSystem()
+    
+    return self
 end
 
--- Intro --
-function Luminosity.LoadingScreen()
-    coroutine.wrap(function()
-        local LoadingScreen = Utility.new("Frame", {
-            Name = "LoadingScreen",
-            Parent = Luminosity.ScreenGui,
-            BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-            BackgroundTransparency = 1,
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, 0, 1, 0),
-            ZIndex = 5
-        }, {
-            Utility.new("VideoFrame", {
-                Name = "LoadingVideo",
-                Visible = false,
-                BorderSizePixel = 0,
-                AnchorPoint = Vector2.new(0.5, 0.5),
-                Size = UDim2.new(0, 750, 0, 425),
-                Position = UDim2.new(0.5, 0, 0.5, 0),
-                ZIndex = 10,
-                Looped = true,
-                Playing = true,
-                TimePosition = 0,
-                Video = "rbxassetid://5608337069"
-            })
-        })
-        Utility.Tween(LoadingScreen, TweenInfo.new(1), {BackgroundTransparency = 0}):Yield()
-
-        -- Loading --    
-        if not LoadingScreen.LoadingVideo.IsLoaded then
-            LoadingScreen.LoadingVideo.Loaded:Wait(10)
-        end
-        LoadingScreen.LoadingVideo.Visible = true
-
-        -- Wait for all assets to load --
-        Utility.Wait(2.5)
-        Services.ContentProvider:PreloadAsync({Luminosity.ScreenGui})
-        Utility.Wait(0.25)
-
-        -- Destroy Screen --
-        LoadingScreen.LoadingVideo.Visible = false
-        Utility.Tween(LoadingScreen, TweenInfo.new(1), {BackgroundTransparency = 1}):Yield()
-        LoadingScreen:Destroy()
-    end)()
-    Utility.Wait(1)
-end
-
--- [ Options ] --
-local function CreateOptions(Frame)
-    local Options = {}
-
-    function Options.TextLabel(Title)
-        local Container = Utility.new("Frame", {
-            Name = "Switch",
-            Parent = typeof(Frame) == "Instance" and Frame or Frame(),
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 25),
-        }, {
-            Utility.new("TextLabel", {
-                Name = "Title",
-                AnchorPoint = Vector2.new(0, 0.5),
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0, 0, 0.5, 0),
-                Size = UDim2.new(1, 0, 1, 0),
-                Font = Enum.Font.Gotham,
-                Text = Title and tostring(Title) or "TextLabel",
-                RichText = true,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 14,
-                TextTransparency = 0.3,
-                TextXAlignment = Enum.TextXAlignment.Left
-            })
-        })
-
-        local Properties = {
-            Text = Title and tostring(Title) or "TextLabel";
-        }
-
-        return setmetatable({}, {
-            __index = function(Self, Index)
-                return Properties[Index]
-            end;
-            __newindex = function(Self, Index, Value)
-                if Index == "Text" then
-                    Container.Title.Text = Value and tostring(Value) or "TextLabel"
-                end
-                Properties[Index] = Value
-            end;
-        })
-    end
-
-    function Options.Button(Title, ButtonText, Callback)
-        local Properties = {
-            Title = Title and tostring(Title) or "Button";
-            Function = Callback or function(Status) end;
-        }
-
-        local Container = Utility.new("ImageButton", {
-            Name = "Button",
-            Parent = typeof(Frame) == "Instance" and Frame or Frame(),
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 25),
-        }, {
-            Utility.new("TextLabel", {
-                Name = "Title",
-                AnchorPoint = Vector2.new(0, 0.5),
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0, 0, 0.5, 0),
-                Size = UDim2.new(0.5, 0, 1, 0),
-                Font = Enum.Font.Gotham,
-                Text = Title and tostring(Title) or "Button",
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 14,
-                TextTransparency = 0.3,
-                TextXAlignment = Enum.TextXAlignment.Left
-            }),
-            Utility.new("TextButton", {
-                Name = "Button",
-                AnchorPoint = Vector2.new(1, 0.5),
-                BackgroundColor3 = Color3.fromRGB(50, 55, 60),
-                Position = UDim2.new(1, 0, 0.5, 0),
-                Size = UDim2.new(0.2, 25, 0, 20),
-                Text = ButtonText and tostring(ButtonText) or "Button",
-                Font = Enum.Font.Gotham,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 12,
-                TextTransparency = 0.3
-            }, {
-                Utility.new("UICorner", {CornerRadius = UDim.new(0, 4)})
-            })
-        })
-
-        Container.Button.MouseButton1Down:Connect(function()
-            local Success, Error = pcall(Properties.Function)
-            assert(Luminosity.Settings.Debug == false or Success, Error)
-        end)
-
-        return setmetatable({}, {
-            __index = function(Self, Index)
-                return Properties[Index]
-            end;
-            __newindex = function(Self, Index, Value)
-                if Index == "Title" then
-                    Container.Title.Text = Value and tostring(Value) or "Button"
-                elseif Index == "ButtonText" then
-                    Container.Button.Text = Value and tostring(Value) or "Button"
-                end
-                Properties[Index] = Value
-            end
-        })
-    end
-
-    function Options.Switch(Title, Callback)
-        local Properties = {
-            Title = Title and tostring(Title) or "Switch";
-            Value = false;
-            Function = Callback or function(Status) end;
-        }
-
-        local Container = Utility.new("ImageButton", {
-            Name = "Switch",
-            Parent = typeof(Frame) == "Instance" and Frame or Frame(),
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 25),
-        }, {
-            Utility.new("TextLabel", {
-                Name = "Title",
-                AnchorPoint = Vector2.new(0, 0.5),
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0, 0, 0.5, 0),
-                Size = UDim2.new(1, -30, 1, 0),
-                Font = Enum.Font.Gotham,
-                Text = Title and tostring(Title) or "Switch",
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 14,
-                TextTransparency = 0.3,
-                TextXAlignment = Enum.TextXAlignment.Left
-            }),
-            Utility.new("Frame", {
-                Name = "Switch",
-                AnchorPoint = Vector2.new(1, 0.5),
-                BackgroundColor3 = Color3.fromRGB(100, 100, 100),
-                Position = UDim2.new(1, 0, 0.5, 0),
-                Size = UDim2.new(0, 25, 0, 15),
-            }, {
-                Utility.new("UICorner", {CornerRadius = UDim.new(1, 0)}),
-                Utility.new("Frame", {
-                    Name = "Circle",
-                    AnchorPoint = Vector2.new(0, 0.5),
-                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                    Position = UDim2.new(0, 0, 0.5, 0),
-                    Size = UDim2.new(0, 14, 0, 14)
-                }, {Utility.new("UICorner", {CornerRadius = UDim.new(1, 0)})})
-            })
-        })
-
-        local Tweens = {
-            [true] = {
-                Utility.Tween(Container.Switch, TweenInfo.new(0.5), {BackgroundColor3 = Luminosity.ColorScheme.Primary}),
-                Utility.Tween(Container.Switch.Circle, TweenInfo.new(0.25), {AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 0, 0.5, 0)})
-            };
-
-            [false] = {
-                Utility.Tween(Container.Switch, TweenInfo.new(0.5), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}),
-                Utility.Tween(Container.Switch.Circle, TweenInfo.new(0.25), {AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 0, 0.5, 0)})
-            };
-        }
-
-        Container.MouseButton1Down:Connect(function()
-            Properties.Value = not  Properties.Value
-            for i,v in ipairs(Tweens[Properties.Value]) do
-                v:Play()
-            end
-            local Success, Error = pcall(Properties.Function, Properties.Value)
-            assert(Luminosity.Settings.Debug == false or Success, Error)
-        end)
-
-        return setmetatable({}, {
-            __index = function(Self, Index)
-                return Properties[Index]
-            end;
-            __newindex = function(Self, Index, Value)
-                if Index == "Title" then
-                    Container.Title.Text = Value and tostring(Value) or "Switch"
-                elseif Index == "Value" then
-                    for i,v in ipairs(Tweens[Value]) do
-                        v:Play()
-                    end
-                    local Success, Error = pcall(Properties.Function, Value)
-                    assert(Luminosity.Settings.Debug == false or Success, Error)
-                end
-                Properties[Index] = Value
-            end;
-        })
-    end
-
-    function Options.Toggle(Title, Callback)
-        local Properties = {
-            Title = Title and tostring(Title) or "Switch";
-            Value = false;
-            Function = Callback or function(Status) end;
-        }
-
-        local Container = Utility.new("ImageButton", {
-            Name = "Toggle",
-            Parent = typeof(Frame) == "Instance" and Frame or Frame(),
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 25)
-        }, {
-            Utility.new("TextLabel", {
-                Name = "Title",
-                AnchorPoint = Vector2.new(0, 0.5),
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0, 0, 0.5, 0),
-                Size = UDim2.new(1, -30, 1, 0),
-                Font = Enum.Font.Gotham,
-                Text = Title and tostring(Title) or "Switch",
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 14,
-                TextTransparency = 0.3,
-                TextXAlignment = Enum.TextXAlignment.Left
-            }),
-
-            Utility.new("ImageLabel", {
-                Name = "Toggle",
-                AnchorPoint = Vector2.new(1, 0.5),
-                BackgroundTransparency = 1,
-                Position = UDim2.new(1, 0, 0.5, 0),
-                Size = UDim2.new(0, 20, 0, 20),
-                ZIndex = 2,
-                Image = "rbxassetid://6031068420"
-            }, {
-                Utility.new("ImageLabel", {
-                    Name = "Fill",
-                    BackgroundTransparency = 1,
-                    Size = UDim2.new(1, 0, 1, 0),
-                    Image = "rbxassetid://6031068421",
-                    ImageTransparency = 1
-                })
-            })
-        })
-
-        local Tweens = {
-            [true] = {
-                Utility.Tween(Container.Toggle.Fill, TweenInfo.new(0.2), {ImageTransparency = 0}),
-                Utility.Tween(Container.Toggle, TweenInfo.new(0.5), {ImageColor3 = Color3.fromRGB(240, 240, 240)})
-            };
-            [false] = {
-                Utility.Tween(Container.Toggle.Fill, TweenInfo.new(0.2), {ImageTransparency = 1}),
-                Utility.Tween(Container.Toggle, TweenInfo.new(0.5), {ImageColor3 = Color3.fromRGB(255, 255, 255)})
-            };
-        }
-
-        Container.MouseButton1Down:Connect(function()
-            Properties.Value = not Properties.Value
-            for i,v in ipairs(Tweens[Properties.Value]) do
-                v:Play()
-            end
-            local Success, Error = pcall(Properties.Function, Properties.Value)
-            assert(Luminosity.Settings.Debug == false or Success, Error)
-        end)
-
-        return setmetatable({}, {
-            __index = function(Self, Index)
-                return Properties[Index]
-            end;
-            __newindex = function(Self, Index, Value)
-                if Index == "Title" then
-                    Container.Title.Text = Value and tostring(Value) or "Switch"
-                elseif Index == "Value" then
-                    for i,v in ipairs(Tweens[Value]) do
-                        v:Play()
-                    end
-                    local Success, Error = pcall(Properties.Function, Value)
-                    assert(Luminosity.Settings.Debug == false or Success, Error)
-                end
-                Properties[Index] = Value
-            end
-        })
-    end
-
-    function Options.TextBox(Title, PlaceHolder, Callback)
-        local Properties = {
-            Title = Title and tostring(Title) or "TextBox";
-            Value = "";
-            PlaceHolder = PlaceHolder and tostring(PlaceHolder) or "Input";
-            Function = Callback or function(Status) end;
-        }
-
-        local Container = Utility.new("ImageButton", {
-            Name = "TextBox",
-            Parent = typeof(Frame) == "Instance" and Frame or Frame(),
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 25)
-        }, {
-            Utility.new("TextLabel", {
-                Name = "Title",
-                AnchorPoint = Vector2.new(0, 0.5),
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0, 0, 0.5, 0),
-                Size = UDim2.new(0.5, 0, 1, 0),
-                Font = Enum.Font.Gotham,
-                Text = Title and tostring(Title) or "TextBox",
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 14,
-                TextTransparency = 0.3,
-                TextXAlignment = Enum.TextXAlignment.Left
-            }),
-            Utility.new("ImageLabel", {
-                Name = "TextBox",
-                AnchorPoint = Vector2.new(1, 0.5),
-                BackgroundTransparency = 1,
-                Position = UDim2.new(1, 0, 0.5, 0),
-                Size = UDim2.new(0.2, 25, 0, 20),
-                Image = "rbxassetid://3570695787",
-                ImageColor3 = Color3.fromRGB(50, 55, 60),
-                ScaleType = Enum.ScaleType.Slice,
-                SliceCenter = Rect.new(100, 100, 100, 100),
-                SliceScale = 0.04
-            }, {
-                Utility.new("TextBox", {
-                    Name = "Input",
-                    BackgroundTransparency = 1,
-                    Size = UDim2.new(1, 0, 1, 0),
-                    Font = Enum.Font.Gotham,
-                    PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
-                    PlaceholderText = PlaceHolder and tostring(PlaceHolder) or "Input",
-                    TextColor3 = Color3.fromRGB(255, 255, 255),
-                    TextSize = 12,
-                    TextTransparency = 0.3,
-                    TextXAlignment = Enum.TextXAlignment.Left
-                }, {Utility.new("UIPadding", {PaddingLeft = UDim.new(0, 5), PaddingRight = UDim.new(0, 5)})})
-            })
-        })
-
-        Container.MouseButton1Down:Connect(function()
-            Container.TextBox.Input:CaptureFocus()
-        end)
-
-        Container.TextBox.Input:GetPropertyChangedSignal("Text"):Connect(function()
-            local TextLength = Container.TextBox.Input.TextBounds.X
-            local MaxSize = (Container.AbsoluteSize.X - Container.Title.TextBounds.X) - 40
-            if Container.TextBox.Input.TextTruncate == Enum.TextTruncate.None then
-                Utility.Tween(Container.TextBox, TweenInfo.new(0.1), {Size = UDim2.new(0.2, math.clamp(TextLength - (Container.AbsoluteSize.X * 0.2) + 15, 25, MaxSize), 0, 20)}):Play()
-            end
-            Container.TextBox.Input.TextTruncate = TextLength + 10 > MaxSize and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
-            Properties.Value = Container.TextBox.Input.Text
-        end)
-
-        Container.TextBox.Input.FocusLost:Connect(function(EnterPressed, Input)
-            if EnterPressed then
-                coroutine.wrap(function()
-                    local Success, Error = pcall(Properties.Function, Properties.Value)
-                    assert(Luminosity.Settings.Debug == false or Success, Error)
-                end)
-                Container.TextBox.Input.Text = ""
-            end
-        end)
-
-        return setmetatable({}, {
-            __index = function(Self, Index)
-                return Properties[Index]
-            end;
-            __newindex = function(Self, Index, Value)
-                if Index == "Title" then
-                    Container.Title.Text = Value and tostring(Value) or "TextBox"
-                elseif Index == "Placeholder" then
-                    Container.TextBox.Input.PlaceholderText = Value and tostring(Value) or "Input"
-                elseif Index == "Value" then
-                    Container.TextBox.Input.Text = Value and tostring(Value) or ""
-                end
-                Properties[Index] = Value
-            end
-        })
-    end
-
-    function Options.Dropdown(Title, List, Callback, Placeholder)
-
-    end
-
-    function Options.Slider(Title, Settings, Callback)
-        Settings = Settings or {}
-        local Properties = {
-            Title = Title and tostring(Title) or "Slider";
-            Value = nil;
-            Settings = Settings;
-            Function = Callback or function(Status) end;
-        }
-        for i,v in pairs({Precise = false, Default = 1, Min = 1, Max = 10}) do
-            if Properties.Settings[i] == nil then
-                Properties.Settings[i] = v
-            end
-        end
-        Properties.Value = math.clamp(Properties.Settings.Default or Properties.Settings.Min, Properties.Settings.Min, Properties.Settings.Max)
-
-        local Container = Utility.new("ImageButton", {
-            Name = "Slider",
-            Parent = typeof(Frame) == "Instance" and Frame or Frame(),
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 35)
-        }, {
-            Utility.new("TextLabel", {
-                Name = "Title",
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0, 0, 0, 2),
-                Size = UDim2.new(1, -75, 0, 20),
-                Font = Enum.Font.Gotham,
-                Text = Title and tostring(Title) or "Slider",
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 14,
-                TextTransparency = 0.3,
-                TextXAlignment = Enum.TextXAlignment.Left
-            }),
-        
-            Utility.new("TextBox", {
-                Name = "Value",
-                Active = true,
-                AnchorPoint = Vector2.new(1, 0),
-                BackgroundTransparency = 1,
-                Position = UDim2.new(1, 0, 0, 2),
-                Size = UDim2.new(0, 75, 0, 20),
-                Font = Enum.Font.Gotham,
-                Text = tostring(Properties.Value),
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 14,
-                TextTransparency = 0.3,
-                TextXAlignment = Enum.TextXAlignment.Right
-            }),
-        
-            Utility.new("ImageLabel", {
-                Name = "Bar",
-                AnchorPoint = Vector2.new(0.5, 0),
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0.5, 0, 0, 25),
-                Size = UDim2.new(1, 5, 0, 5),
-                Image = "rbxassetid://5028857472",
-                ImageColor3 = Color3.fromRGB(20, 20, 20),
-                ScaleType = Enum.ScaleType.Slice,
-                SliceCenter = Rect.new(2, 2, 298, 298)
-            }, {
-                Utility.new("ImageLabel", {
-                    Name = "Fill",
-                    BackgroundTransparency = 1,
-                    Size = UDim2.new(0, 0, 1, 0),
-                    Image = "rbxassetid://5028857472",
-                    ImageColor3 = Luminosity.ColorScheme.Primary,
-                    ScaleType = Enum.ScaleType.Slice,
-                    SliceCenter = Rect.new(2, 2, 298, 298)
-                }, {
-                    Utility.new("Frame", {
-                        Name = "Circle",
-                        AnchorPoint = Vector2.new(0.5, 0.5),
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        BackgroundTransparency = 1,
-                        ZIndex = 2,
-                        Position = UDim2.new(1, 0, 0.5, 0),
-                        Size = UDim2.new(0, 10, 0, 10)
-                    }, {
-                        Utility.new("UICorner", {CornerRadius = UDim.new(1, 0)}),
-                        Utility.new("Frame", {
-                            Name = "Ripple",
-                            AnchorPoint = Vector2.new(0.5, 0.5),
-                            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                            BackgroundTransparency = 0.75,
-                            Position = UDim2.new(0.5, 0, 0.5, 0),
-                            Size = UDim2.new(0, 0, 0, 0)
-                        }, {Utility.new("UICorner", {CornerRadius = UDim.new(1, 0)})})
-                    })
-                })
-            })
-        })
-
-        local Info = {
-            Sliding = false;
-            LastSelected = 0;
-            LastUpdated = 0;
-            Idled = false;
-        }
-
-        local function UpdateSlider(Value)
-            if time() - Info.LastUpdated < 0.01 then
-                return
-            end
-            Info.LastUpdated = time()
-
-            Value = math.clamp(Value, Properties.Settings.Min, Properties.Settings.Max)
-            if Properties.Settings.Precise then
-                Value = math.floor(Value + 0.5)
-            end
-            Container.Value.Text = tostring(Value)
-            Properties.Value = Value
-            local Percentage = math.clamp((Value - Properties.Settings.Min) / (Properties.Settings.Max - Properties.Settings.Min), 0, 1)
-            Utility.Tween(Container.Bar.Fill, TweenInfo.new(0.1), {Size = UDim2.new(Percentage, 0, 1, 0)}):Play()
-        end
-
-        Services.UserInputService.InputChanged:Connect(function(Input)
-            if Info.Sliding == true and Input.UserInputType == Enum.UserInputType.MouseMovement then
-                UpdateSlider(((Input.Position.X - Container.Bar.AbsolutePosition.X) / Container.Bar.AbsoluteSize.X) * Properties.Settings.Max)
-                Info.LastSelected = time()
-                local Success, Error = pcall(Properties.Function, Properties.Value)
-                assert(Luminosity.Settings.Debug == false or Success, Error)
-            end
-        end)
-
-        local CircleTweens = {
-            Visible = Utility.Tween(Container.Bar.Fill.Circle, TweenInfo.new(0.25), {BackgroundTransparency = 0});
-            Hidden = Utility.Tween(Container.Bar.Fill.Circle, TweenInfo.new(0.5), {BackgroundTransparency = 1});
-        }
-        local RippleTweens = {
-            Visible = Utility.Tween(Container.Bar.Fill.Circle.Ripple, TweenInfo.new(0.25), {Size = UDim2.new(0, 26, 0, 26)});
-            Hidden = Utility.Tween(Container.Bar.Fill.Circle.Ripple, TweenInfo.new(0.25), {Size = UDim2.new(0, 0, 0, 0)});
-        }
-        Container.MouseButton1Down:Connect(function()
-            Info.Sliding = true
-            UpdateSlider(((Services.UserInputService:GetMouseLocation().X - Container.Bar.AbsolutePosition.X) / Container.Bar.AbsoluteSize.X) * Properties.Settings.Max)
-            Info.LastSelected = time()
-            CircleTweens.Visible:Play()
-            RippleTweens.Visible:Play()
-            local Success, Error = pcall(Properties.Function, Properties.Value)
-            assert(Luminosity.Settings.Debug == false or Success, Error)
-        end)
-        Container.InputEnded:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                Info.Sliding = false
-                Info.LastSelected = time()
-                
-                RippleTweens.Hidden:Play()
-                Info.Idled = true
-                repeat
-                    Utility.Wait(0.1)
-                    if Info.Idled == false then
-                        return
-                    end
-                until time() - Info.LastSelected > 2.5
-                CircleTweens.Hidden:Play()
-                Info.Idled = false
-            end
-        end)
-
-        Container.Value.FocusLost:Connect(function()
-            local Text = Container.Value.Text
-            if Text == "" then
-                Container.Value.Text = tostring(Properties.Settings.Min)
-            elseif tonumber(Text) == nil then
-                Container.Value.Text = tostring(Properties.Settings.Min)
-            end
-            UpdateSlider(tonumber(Container.TextBox.Text) or Options.Min)
-            local Success, Error = pcall(Properties.Function, Properties.Value)
-            assert(Luminosity.Settings.Debug == false or Success, Error)
-        end)
-
-        Container.Value:GetPropertyChangedSignal("Text"):Connect(function()
-            local Text = Container.Value.Text
-            if not table.find({"", "-"}, Text) and not tonumber(Text) then
-                Container.Value.Text = Text:sub(1, #Text - 1)
-            elseif not table.find({"", "-"}, Text) then
-                UpdateSlider(tonumber(Text))
-            end
-        end)
-
-        UpdateSlider(Properties.Value)
-        return setmetatable({}, {
-            __index = function(Self, Index)
-                return Properties[Index]
-            end;
-            __newindex = function(Self, Index, Value)
-                if Index == "Title" then
-                    Container.Title.Text = Value and tostring(Value) or "TextBox"
-                elseif Index == "Value" then
-                    UpdateSlider(tonumber(Value))
-                end
-                Properties[Index] = Value
-            end
-        })
-    end
-
-    return Options
-end
-
-function Luminosity.new(Name, Header, Icon)
-    local Main = Utility.new(
-        -- Class --
-        "ImageButton",
-
-        -- Properties --
-        {
-            Name = "Main",
-            Parent = Luminosity.ScreenGui,
-            Active = true,
-            Modal = true,
-            AnchorPoint = Vector2.new(0.5, 0.5),
-            BackgroundTransparency = 1,
-            Position = UDim2.new(0.5, 0, 0.5, 0),
-            Size = UDim2.new(0, 700, 0, 475),
-            ZIndex = 0,
-            ClipsDescendants = true,
-            Image = "rbxassetid://3570695787",
-            ImageColor3 = Color3.fromRGB(50, 53, 59),
-            ScaleType = Enum.ScaleType.Slice,
-            SliceCenter = Rect.new(100, 100, 100, 100),
-            SliceScale = 0.1
-        },
-
-        -- Children --
-        {
-            -- Contents
-            Utility.new("Frame", {
-                Name = "Contents",
-                BackgroundTransparency = 1,
-                ClipsDescendants = true,
-                Position = UDim2.new(0, 200, 0, 0),
-                Size = UDim2.new(1, -200, 1, 0),
-                ZIndex = 0
-            }, {
-                Utility.new("UIPageLayout", {
-                    EasingStyle = Enum.EasingStyle.Quad,
-                    TweenTime = 0.25,
-                    FillDirection = Enum.FillDirection.Vertical,
-                    HorizontalAlignment = Enum.HorizontalAlignment.Center,
-                    SortOrder = Enum.SortOrder.LayoutOrder,
-                    VerticalAlignment = Enum.VerticalAlignment.Center,
-                    GamepadInputEnabled = false,
-                    ScrollWheelInputEnabled = false,
-                    TouchInputEnabled = false
-                })
-            }),
-
-            -- SideBar
-            Utility.new("ImageLabel", {
-                Name = "SideBar",
-                BackgroundTransparency = 1,
-                Size = UDim2.new(0, 200, 1, 0),
-                Image = "rbxassetid://3570695787",
-                ImageColor3 = Color3.fromRGB(47, 49, 54),
-                ScaleType = Enum.ScaleType.Slice,
-                SliceCenter = Rect.new(100, 100, 100, 100),
-                SliceScale = 0.1
-            }, {
-                -- Info
-                Utility.new("Frame", {
-                    Name = "Info",
-                    BackgroundTransparency = 1,
-                    LayoutOrder = -5,
-                    Size = UDim2.new(1, 0, 0, 75)
-                }, {
-                    Utility.new("ImageLabel", {
-                        Name = "Logo",
-                        BackgroundTransparency = 1,
-                        Size = UDim2.new(0, 30, 0, 30),
-                        Image = Icon and "rbxassetid://" .. tostring(Icon) or "rbxassetid://4370345701",
-                        ScaleType = Enum.ScaleType.Fit
-                    }),
-                    Utility.new("TextLabel", {
-                        Name = "Title",
-                        AnchorPoint = Vector2.new(0, 0.5),
-                        BackgroundTransparency = 1,
-                        Position = UDim2.new(0, 35, 0, 15),
-                        Size = UDim2.new(1, -35, 0, 25),
-                        Font = Enum.Font.GothamBold,
-                        Text = Name and tostring(Name) or "Luminosity",
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
-                        TextScaled = true,
-                        TextWrapped = true,
-                        TextXAlignment = Enum.TextXAlignment.Left
-                    }),
-                    Utility.new("TextLabel", {
-                        Name = "Header",
-                        BackgroundTransparency = 1,
-                        Position = UDim2.new(0, 0, 0, 32),
-                        Size = UDim2.new(0, 125, 0, 15),
-                        Font = Enum.Font.Gotham,
-                        Text = Header and tostring(Header) or "v1.0.0",
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
-                        TextSize = 15,
-                        TextTransparency = 0.3,
-                        TextWrapped = true,
-                        TextXAlignment = Enum.TextXAlignment.Left
-                    }),
-                    Utility.new("Frame", {
-                        Name = "Divider",
-                        AnchorPoint = Vector2.new(0.5, 1),
-                        BackgroundColor3 = Color3.fromRGB(200, 200, 200),
-                        BackgroundTransparency = 0.25,
-                        BorderSizePixel = 0,
-                        Position = UDim2.new(0.5, 0, 1, 0),
-                        Size = UDim2.new(1, 0, 0, 1)
-                    }, {Utility.new("UIGradient", {Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.25, 0.1), NumberSequenceKeypoint.new(1, 1)}})}),
-
-                    Utility.new("UIPadding", {PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 20)})
-                }),
-
-                -- Ornaments
-                Utility.new("Folder", {Name = "Ornaments"}, {
-                    Utility.new("Frame", {
-                        Name = "Shadow",
-                        BackgroundTransparency = 1,
-                        Position = UDim2.new(0, 5, 0, 0),
-                        Size = UDim2.new(1, 0, 1, 0),
-                        ZIndex = 0
-                    }, {
-                        Utility.new("ImageLabel", {
-                            Name = "umbraShadow",
-                            BackgroundTransparency = 1,
-                            Size = UDim2.new(1, 2, 1, 2),
-                            ZIndex = 0,
-                            Image = "rbxassetid://1316045217",
-                            ImageColor3 = Color3.fromRGB(0, 0, 0),
-                            ImageTransparency = 0.86,
-                            ScaleType = Enum.ScaleType.Slice,
-                            SliceCenter = Rect.new(10, 10, 118, 118)
-                        }),
-                        Utility.new("ImageLabel", {
-                            Name = "penumbraShadow",
-                            BackgroundTransparency = 1,
-                            Size = UDim2.new(1, 2, 1, 2),
-                            ZIndex = 0,
-                            Image = "rbxassetid://1316045217",
-                            ImageColor3 = Color3.fromRGB(0, 0, 0),
-                            ImageTransparency = 0.76,
-                            ScaleType = Enum.ScaleType.Slice,
-                            SliceCenter = Rect.new(10, 10, 118, 118)
-                        }),
-                        Utility.new("ImageLabel", {
-                            Name = "ambientShadow",
-                            BackgroundTransparency = 1,
-                            Size = UDim2.new(1, 2, 1, 2),
-                            ZIndex = 0,
-                            Image = "rbxassetid://1316045217",
-                            ImageColor3 = Color3.fromRGB(0, 0, 0),
-                            ImageTransparency = 0.75,
-                            ScaleType = Enum.ScaleType.Slice,
-                            SliceCenter = Rect.new(10, 10, 118, 118)
-                        })
-                    }),
-                    Utility.new("Frame", {
-                        Name = "Hider",
-                        AnchorPoint = Vector2.new(1, 0.5),
-                        BackgroundColor3 = Color3.fromRGB(47, 49, 54),
-                        BorderSizePixel = 0,
-                        Position = UDim2.new(1, 0, 0.5, 0),
-                        Size = UDim2.new(0, 5, 1, 0)
-                    })
-                }),
-                -- UIListLayout
-                Utility.new("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2)})
-            }),
-
-            -- UISizeConstraint
-            Utility.new("UISizeConstraint", {MaxSize = Vector2.new(1400, 950), MinSize = Vector2.new(300, 200)})
-        }
-    )
-    local DragPro = Utility.CreateDrag(Main, Main, {TweenDuration = 0.15, TweenStyle = Enum.EasingStyle.Quad})
-    local UIPageLayout = Main.Contents.UIPageLayout
-
-    -- Scripts --
-    Main.SideBar.MouseWheelBackward:Connect(function()
-        UIPageLayout:Next()
-    end)
-
-    Main.SideBar.MouseWheelForward:Connect(function()
-        UIPageLayout:Previous()
-    end)
-
-    -- Window --
-    local Window = {
-        Title = Name and tostring(Name) or "Luminosity";
-        Header = Header and tostring(Header) or "v1.0.0";
-        Icon = tostring(Icon) or "4370345701";
-        Toggled = true;
+-- Ana window oluşturma (Aurelius benzeri)
+function ModernGUI:createMainWindow()
+    local window = Instance.new("Frame")
+    window.Name = "MainWindow"
+    window.Size = UDim2.new(0, 800, 0, 600)
+    window.Position = UDim2.new(0.5, -400, 0.5, -300)
+    window.BackgroundColor3 = ModernTheme.Background
+    window.BorderSizePixel = 0
+    window.Parent = self.ScreenGui
+    
+    -- Corner radius
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = window
+    
+    -- Glow effect
+    self:_addGlowEffect(window)
+    
+    -- Sol sidebar (navigation)
+    local sidebar = self:_createSidebar(window)
+    
+    -- Sağ content area
+    local contentArea = self:_createContentArea(window)
+    
+    -- Top bar (title + controls)
+    local topBar = self:_createTopBar(window)
+    
+    -- Draggable
+    self:_makeDraggable(window, topBar)
+    
+    -- Animation in
+    self:_animateWindowIn(window)
+    
+    local windowObj = {
+        Frame = window,
+        Sidebar = sidebar,
+        Content = contentArea,
+        TopBar = topBar,
+        Tabs = {},
+        CurrentTab = nil
     }
-    local WindowInfo = {
-        SizeSave = UDim2.new(0, 700, 0, 500)
-    }
-
-    function Window:Toggle(Value)
-        Window.Toggled = Value or not Window.Toggled
-
-        local AbsolutePosition = Main.AbsolutePosition
-        local AbsoulteSize = Main.AbsoluteSize
-        if Window.Toggled == true then
-            Main.Visible = true
-            Utility.Tween(Main, TweenInfo.new(0.25), {Size = WindowInfo.SizeSave}):Yield()
-            Main.UISizeConstraint.MinSize = Vector2.new(300, 200)
-            Main.Position = UDim2.new(0, AbsolutePosition.X, 0, AbsolutePosition.Y)
-        else
-            WindowInfo.SizeSave = Main.Size
-            Main.Position = UDim2.new(0, AbsolutePosition.X + (AbsoulteSize.X * 0.5), 0, AbsolutePosition.Y + (AbsoulteSize.Y * 0.5))
-            Main.AnchorPoint = Vector2.new(0.5, 0.5)
-            Main.UISizeConstraint.MinSize = Vector2.new(0, 0)
-            Utility.Tween(Main, TweenInfo.new(0.5), {Size = UDim2.new(0, 0, 0, 0)}):Yield()
-            Main.Visible = false
-        end
-    end
-
-    function Window.Tab(Title, Icon)
-        local TabFrame = Utility.new("ScrollingFrame", {
-            Name = "Tab",
-            Parent = Main.Contents,
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, -40, 1, -40),
-            ScrollBarThickness = 0
-        }, {
-            Utility.new("UIListLayout", {HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 10)})
-        })
-
-        local TabButton = Utility.new("Frame", {
-            Name = "Button",
-            Parent = Main.SideBar,
-            BackgroundColor3 = Luminosity.ColorScheme.Primary,
-            BackgroundTransparency = 1,
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, 0, 0, 40)
-        }, {
-            Utility.new("ImageLabel", {
-                Name = "Icon",
-                AnchorPoint = Vector2.new(0, 0.5),
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0, 15, 0.5, 0),
-                Size = UDim2.new(0, 20, 0, 20),
-                Image = Icon and "rbxassetid://" .. tostring(Icon) or "rbxassetid://6023426915",
-                ImageTransparency = 0.3
-            }),
-            Utility.new("TextLabel", {
-                Name = "Title",
-                AnchorPoint = Vector2.new(0, 0.5),
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0, 40, 0.5, 0),
-                Size = UDim2.new(1, -50, 0, 19),
-                Font = Enum.Font.Gotham,
-                Text = Title and tostring(Title) or "Tab",
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 15,
-                TextTransparency = 0.3,
-                TextTruncate = Enum.TextTruncate.AtEnd,
-                TextXAlignment = Enum.TextXAlignment.Left
-            })
-        })
-
-        -- Scripts --
-        TabFrame.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            TabFrame.CanvasSize = UDim2.new(0, 0, 0, TabFrame.UIListLayout.AbsoluteContentSize.Y)
-        end)
-
-        TabButton.InputBegan:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                UIPageLayout:JumpTo(TabFrame)
-                Utility.Wait()
-                DragPro.Dragging = false
-            end
-        end)
-
-        local ButtonTweens = {
-            Focused = {
-                Utility.Tween(TabButton, TweenInfo.new(0.25), {BackgroundTransparency = 0}),
-                Utility.Tween(TabButton.Title, TweenInfo.new(0.25), {TextTransparency = 0}),
-                Utility.Tween(TabButton.Icon, TweenInfo.new(0.25), {ImageTransparency = 0})
-            };
-            Idle = {
-                Utility.Tween(TabButton, TweenInfo.new(0.25), {BackgroundTransparency = 1}),
-                Utility.Tween(TabButton.Title, TweenInfo.new(0.25), {TextTransparency = 0.3}),
-                Utility.Tween(TabButton.Icon, TweenInfo.new(0.25), {ImageTransparency = 0.3})
-            };
-            Selected = false;
-        }
-
-        UIPageLayout:GetPropertyChangedSignal("CurrentPage"):Connect(function()
-            local PageFocused = UIPageLayout.CurrentPage == TabFrame
-            if PageFocused and ButtonTweens.Selected == false then
-                for i,v in ipairs(ButtonTweens.Focused) do
-                    v:Play()
-                end
-            elseif PageFocused == false and ButtonTweens.Selected == true then
-                for i,v in ipairs(ButtonTweens.Idle) do
-                    v:Play()
-                end
-            end
-            ButtonTweens.Selected = PageFocused
-        end)
-
-        -- Tab --
-        local Tab = {}
-
-        function Tab.Folder(Title, Description)
-            local Properties = {}
-
-            local Base =  Utility.new("ImageLabel", {
-                Name = "Content",
-                Parent = TabFrame,
-                BackgroundTransparency = 1,
-                ClipsDescendants = true,
-                Size = UDim2.new(1, 0, 0, 40),
-                Image = "rbxassetid://3570695787",
-                ImageColor3 = Color3.fromRGB(64, 68, 75),
-                ScaleType = Enum.ScaleType.Slice,
-                SliceCenter = Rect.new(100, 100, 100, 100),
-                SliceScale = 0.05
-            }, {
-                -- Icon --
-                Utility.new("ImageLabel", {
-                    Name = "Icon",
-                    AnchorPoint = Vector2.new(0, 0.5),
-                    BackgroundTransparency = 1,
-                    Position = UDim2.new(0, 0, 0, 10),
-                    Size = UDim2.new(0, 10, 0, 10),
-                    Image = "rbxassetid://6031625146",
-                    ImageTransparency = 0.3
-                }),
-            
-                -- Title --
-                Utility.new("TextLabel", {
-                    Name = "Title",
-                    AnchorPoint = Vector2.new(0, 0.5),
-                    BackgroundTransparency = 1,
-                    Position = UDim2.new(0, 20, 0, 10),
-                    Size = UDim2.new(1, -50, 0, 20),
-                    Font = Enum.Font.Gotham,
-                    Text = Title and tostring(Title) or "Folder",
-                    RichText = true,
-                    TextColor3 = Color3.fromRGB(255, 255, 255),
-                    TextSize = 15,
-                    TextTransparency = 0.3,
-                    TextXAlignment = Enum.TextXAlignment.Left
-                }),
-            
-                -- Arrow --
-                Utility.new("ImageLabel", {
-                    Name = "Arrow",
-                    AnchorPoint = Vector2.new(1, 0.5),
-                    BackgroundTransparency = 1,
-                    Position = UDim2.new(1, 0, 0, 10),
-                    Size = UDim2.new(0, 25, 0, 25),
-                    Image = "rbxassetid://6034818372",
-                    ImageTransparency = 0.3,
-                    ScaleType = Enum.ScaleType.Fit,
-                    SliceCenter = Rect.new(30, 30, 30, 30),
-                    SliceScale = 7
-                }),
-            
-                -- UIPadding --
-                Utility.new("UIPadding", {PaddingBottom = UDim.new(0, 10), PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 10)}),
-            
-                -- Info --
-                Utility.new("ImageButton", {
-                    Name = "Info",
-                    Active = true,
-                    AnchorPoint = Vector2.new(0.5, 0),
-                    BackgroundTransparency = 1,
-                    Position = UDim2.new(0.5, 0, 0, 30),
-                    Size = UDim2.new(1, 0, 0, 0)
-                }, {
-                    Utility.new("TextLabel", {
-                        Name = "Description",
-                        BackgroundTransparency = 1,
-                        LayoutOrder = -5,
-                        Size = UDim2.new(1, 0, 0, 30),
-                        Font = Enum.Font.Gotham,
-                        Text = Description and tostring(Description) or "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras justo urna, mattis et neque non.",
-                        RichText = true,
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
-                        TextSize = 14,
-                        TextTransparency = 0.3,
-                        TextWrapped = true,
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        TextYAlignment = Enum.TextYAlignment.Top
-                    }),
-                    Utility.new("UIListLayout", {
-                        Padding = UDim.new(0, 1),
-                        HorizontalAlignment = Enum.HorizontalAlignment.Center,
-                        SortOrder = Enum.SortOrder.LayoutOrder
-                    })
-                })
-            })
-            Base.Info.Description.Size = UDim2.new(1, 0, 0, Services.TextService:GetTextSize(Base.Info.Description.Text, 14, Enum.Font.Gotham, Vector2.new(Base.Info.Description.AbsoluteSize.X, math.huge)).Y + 5)
-
-            local Info = {
-                Collapsed = true;
-            }
-
-            local Tweens = {
-                [true] = {
-                    function()
-                        Utility.Tween(Base, TweenInfo.new(0.5), {Size = UDim2.new(1, 0, 0, 45 + Base.Info.UIListLayout.AbsoluteContentSize.Y)}):Play()
-                        Utility.Wait(0.1)
-                        Base.Icon.Image = "rbxassetid://6026681577"
-                    end,
-                    Utility.Tween(Base.Arrow, TweenInfo.new(0.5), {ImageTransparency = 0, Rotation = 180}),
-                    Utility.Tween(Base.Title, TweenInfo.new(0.5), {TextTransparency = 0, TextColor3 = Luminosity.ColorScheme.Primary}),
-                    Utility.Tween(Base.Icon, TweenInfo.new(0.5), {ImageTransparency = 0, ImageColor3 = Luminosity.ColorScheme.Primary}),
-                };
-                [false] = {
-                    function()
-                        Utility.Wait(0.1)
-                        Base.Icon.Image = "rbxassetid://6031625146"
-                    end,
-                    Utility.Tween(Base, TweenInfo.new(0.5), {Size = UDim2.new(1, 0, 0, 40)}),
-                    Utility.Tween(Base.Arrow, TweenInfo.new(0.5), {ImageTransparency = 0.3, Rotation = 0}),
-                    Utility.Tween(Base.Title, TweenInfo.new(0.5), {TextTransparency = 0.3, TextColor3 = Color3.fromRGB(255, 255, 255)}),
-                    Utility.Tween(Base.Icon, TweenInfo.new(0.5), {ImageTransparency = 0.3, ImageColor3 = Color3.fromRGB(255, 255, 255)})
-                };
-            }
-
-            Base.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    for i,v in ipairs(Tweens[Info.Collapsed]) do
-                        if typeof(v) == "function" then
-                            coroutine.wrap(v)()
-                        else
-                            v:Play()
-                        end
-                    end
-                    Info.Collapsed = not Info.Collapsed
-                    Utility.Wait()
-                    DragPro.Dragging = false
-                end
-            end)
-
-            Base.Info.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                Base.Info.Size = UDim2.new(1, 0, 0, Base.Info.UIListLayout.AbsoluteContentSize.Y + 5)
-            end)
-
-            -- Folder --
-            for i,v in pairs(CreateOptions(Base.Info)) do
-                Properties[i] = v
-            end
-
-            return setmetatable({}, {
-                __index = function(Self, Index)
-                    return Properties[Index]
-                end;
-                __newindex = function(Self, Index, Value)
-                    if Index == "Title" then
-                        Base.Title.Text = Value and tostring(Value) or "Folder"
-                    elseif Index == "Description" then
-                        Base.Info.Description.Text = Value and tostring(Value) or "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras justo urna, mattis et neque non."
-                        Base.Info.Description.Size = UDim2.new(1, 0, 0, Services.TextService:GetTextSize(Base.Info.Description.Text, 14, Enum.Font.Gotham, Vector2.new(Base.Info.Description.AbsoluteSize.X, math.huge)).Y + 5)
-                    end
-                    rawset(Properties, Index, Value)
-                end;
-            })
-        end
-
-        function Tab.Cheat(Title, Description, Callback)
-            local Properties = {
-                Function = Callback or function(Status) end;
-            }
-
-            local Base = Utility.new("ImageLabel", {
-                Name = "Content",
-                Parent = TabFrame,
-                BackgroundTransparency = 1,
-                ClipsDescendants = true,
-                Size = UDim2.new(1, 0, 0, 40),
-                Image = "rbxassetid://3570695787",
-                ImageColor3 = Color3.fromRGB(64, 68, 75),
-                ScaleType = Enum.ScaleType.Slice,
-                SliceCenter = Rect.new(100, 100, 100, 100),
-                SliceScale = 0.05
-            }, {
-                -- Icon --
-                Utility.new("ImageLabel", {
-                    Name = "Icon",
-                    AnchorPoint = Vector2.new(0, 0.5),
-                    BackgroundTransparency = 1,
-                    Position = UDim2.new(0, 0, 0, 10),
-                    Size = UDim2.new(0, 10, 0, 10),
-                    Image = "rbxassetid://6031625146",
-                    ImageTransparency = 0.3
-                }),
-
-                -- Title --
-                Utility.new("TextLabel", {
-                    Name = "Title",
-                    AnchorPoint = Vector2.new(0, 0.5),
-                    BackgroundTransparency = 1,
-                    Position = UDim2.new(0, 20, 0, 10),
-                    Size = UDim2.new(1, -50, 0, 20),
-                    Font = Enum.Font.Gotham,
-                    Text = Title and tostring(Title) or "Cheat",
-                    RichText = true,
-                    TextColor3 = Color3.fromRGB(255, 255, 255),
-                    TextSize = 15,
-                    TextTransparency = 0.3,
-                    TextXAlignment = Enum.TextXAlignment.Left
-                }),
-
-                -- Switch --
-                Utility.new("ImageButton", {
-                    Name = "Switch",
-                    AutoButtonColor = false,
-                    AnchorPoint = Vector2.new(1, 0.5),
-                    BackgroundColor3 = Color3.fromRGB(100, 100, 100),
-                    Position = UDim2.new(1, -30, 0, 10),
-                    Size = UDim2.new(0, 30, 0, 15)
-                }, {
-                    Utility.new("UICorner", {CornerRadius = UDim.new(1, 0)}),
-                    Utility.new("Frame", {
-                        Name = "Circle",
-                        AnchorPoint = Vector2.new(0, 0.5),
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        Position = UDim2.new(0, 0, 0.5, 0),
-                        Size = UDim2.new(0, 14, 0, 14)
-                    }, {Utility.new("UICorner", {CornerRadius = UDim.new(1, 0)})})
-                }),
-
-                -- Arrow --
-                Utility.new("ImageLabel", {
-                    Name = "Arrow",
-                    AnchorPoint = Vector2.new(1, 0.5),
-                    BackgroundTransparency = 1,
-                    Position = UDim2.new(1, 0, 0, 10),
-                    Size = UDim2.new(0, 25, 0, 25),
-                    Image = "rbxassetid://6034818372",
-                    ImageTransparency = 0.3,
-                    ScaleType = Enum.ScaleType.Fit,
-                    SliceCenter = Rect.new(30, 30, 30, 30),
-                    SliceScale = 7
-                }),
-            
-                -- UIPadding --
-                Utility.new("UIPadding", {PaddingBottom = UDim.new(0, 10), PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 10)}),
-            
-                -- Info --
-                Utility.new("ImageButton", {
-                    Name = "Info",
-                    Active = true,
-                    AnchorPoint = Vector2.new(0.5, 0),
-                    BackgroundTransparency = 1,
-                    Position = UDim2.new(0.5, 0, 0, 30),
-                    Size = UDim2.new(1, 0, 0, 0),
-                    ImageTransparency = 1
-                }, {
-                    Utility.new("TextLabel", {
-                        Name = "Description",
-                        BackgroundTransparency = 1,
-                        LayoutOrder = -5,
-                        Size = UDim2.new(1, 0, 0, 30),
-                        Font = Enum.Font.Gotham,
-                        Text = Description and tostring(Description) or "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras justo urna, mattis et neque non.",
-                        RichText = true,
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
-                        TextSize = 14,
-                        TextTransparency = 0.3,
-                        TextWrapped = true,
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        TextYAlignment = Enum.TextYAlignment.Top
-                    }),
-                    Utility.new("UIListLayout", {
-                        Padding = UDim.new(0, 1),
-                        HorizontalAlignment = Enum.HorizontalAlignment.Center,
-                        SortOrder = Enum.SortOrder.LayoutOrder
-                    })
-                })
-            })
-            Base.Info.Description.Size = UDim2.new(1, 0, 0, Services.TextService:GetTextSize(Base.Info.Description.Text, 14, Enum.Font.Gotham, Vector2.new(Base.Info.Description.AbsoluteSize.X, math.huge)).Y + 5)
-
-            local Info = {
-                Toggled = false;
-                Collapsed = true;
-            }
-
-            local FolderTweens = {
-                [true] = {
-                    function()
-                        Utility.Tween(Base, TweenInfo.new(0.5), {Size = UDim2.new(1, 0, 0, 45 + Base.Info.UIListLayout.AbsoluteContentSize.Y)}):Play()
-                        Utility.Wait(0.1)
-                        Base.Icon.Image = "rbxassetid://6026681577"
-                    end,
-                    Utility.Tween(Base.Arrow, TweenInfo.new(0.5), {ImageTransparency = 0, Rotation = 180}),
-                    Utility.Tween(Base.Title, TweenInfo.new(0.5), {TextTransparency = 0, TextColor3 = Luminosity.ColorScheme.Primary}),
-                    Utility.Tween(Base.Icon, TweenInfo.new(0.5), {ImageTransparency = 0, ImageColor3 = Luminosity.ColorScheme.Primary}),
-                };
-                [false] = {
-                    function()
-                        Utility.Wait(0.1)
-                        Base.Icon.Image = "rbxassetid://6031625146"
-                    end,
-                    Utility.Tween(Base, TweenInfo.new(0.5), {Size = UDim2.new(1, 0, 0, 40)}),
-                    Utility.Tween(Base.Arrow, TweenInfo.new(0.5), {ImageTransparency = 0.3, Rotation = 0}),
-                    Utility.Tween(Base.Title, TweenInfo.new(0.5), {TextTransparency = 0.3, TextColor3 = Color3.fromRGB(255, 255, 255)}),
-                    Utility.Tween(Base.Icon, TweenInfo.new(0.5), {ImageTransparency = 0.3, ImageColor3 = Color3.fromRGB(255, 255, 255)}),
-                };
-            }
-
-            local SwitchTweens = {
-                [true] = {
-                    Utility.Tween(Base.Switch, TweenInfo.new(0.5), {BackgroundColor3 = Luminosity.ColorScheme.Primary}),
-                    Utility.Tween(Base.Switch.Circle, TweenInfo.new(0.25), {AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 0, 0.5, 0)})
-                };
-
-                [false] = {
-                    Utility.Tween(Base.Switch, TweenInfo.new(0.5), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}),
-                    Utility.Tween(Base.Switch.Circle, TweenInfo.new(0.25), {AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 0, 0.5, 0)})
-                };
-            }
-
-            Base.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    for i,v in ipairs(FolderTweens[Info.Collapsed]) do
-                        if typeof(v) == "function" then
-                            coroutine.wrap(v)()
-                        else
-                            v:Play()
-                        end
-                    end
-                    Info.Collapsed = not Info.Collapsed
-                    Utility.Wait()
-                    DragPro.Dragging = false
-                end
-            end)
-
-            Base.Switch.MouseButton1Down:Connect(function()
-                Info.Toggled = not Info.Toggled
-                for i,v in ipairs(SwitchTweens[Info.Toggled]) do
-                    v:Play()
-                end
-                local Success, Error = pcall(Properties.Function, Info.Toggled)
-                assert(Luminosity.Settings.Debug == false or Success, Error)
-            end)
-
-            Base.Info.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                Base.Info.Size = UDim2.new(1, 0, 0, Base.Info.UIListLayout.AbsoluteContentSize.Y + 5)
-            end)
-
-            -- Cheat --
-            for i,v in pairs(CreateOptions(Base.Info)) do
-                Properties[i] = v
-            end
-
-            return setmetatable({}, {
-                __index = function(Self, Index)
-                    return Properties[Index]
-                end;
-                __newindex = function(Self, Index, Value)
-                    if Index == "Title" then
-                        Base.Title.Text = Value and tostring(Value) or "Cheat"
-                    elseif Index == "Description" then
-                        Base.Info.Description.Text = Value and tostring(Value) or "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras justo urna, mattis et neque non."
-                        Base.Info.Description.Size = UDim2.new(1, 0, 0, Services.TextService:GetTextSize(Base.Info.Description.Text, 14, Enum.Font.Gotham, Vector2.new(Base.Info.Description.AbsoluteSize.X, math.huge)).Y + 5)
-                    elseif Index == "Value" then
-                        Info.Toggled = Value
-                        for i,v in ipairs(SwitchTweens[Info.Toggled]) do
-                            v:Play()
-                        end
-                        local Success, Error = pcall(Properties.Function, Info.Toggled)
-                        assert(Luminosity.Settings.Debug == false or Success, Error)
-                    end
-                    rawset(Self, Index, Value)
-                end
-            })
-        end
-
-        return setmetatable(Tab, {__newindex = function(Self, Index, Value)
-            if Index == "Title" then
-                TabButton.Title.Text = Value and tostring(Value) or "Tab"
-            elseif Index == "Icon" then
-                TabButton.Icon.Image = Value and "rbxassetid://" .. tostring(Value) or "rbxassetid://4370345701"
-            end
-        end})
-    end
-
-    function Window:Alert()
-        
-    end
-
-    return setmetatable(Window, {__newindex = function(Self, Index, Value)
-        if Index == "Title" then
-            Main.SideBar.Info.Title.Text = Value and tostring(Value) or "Luminosity"
-        elseif Index == "Header" then
-            Main.SideBar.Info.Header.Text = Value and tostring(Value) or "v1.0.0"
-        elseif Index == "Icon" then
-            Main.SideBar.Info.Logo.Image = Value and "rbxassetid://" .. tostring(Value) or "rbxassetid://4370345701"
-        end
-        rawset(Self, Index, Value)
-    end})
+    
+    table.insert(self.Windows, windowObj)
+    return windowObj
 end
 
-return Luminosity
+-- Sidebar oluşturma
+function ModernGUI:_createSidebar(parent)
+    local sidebar = Instance.new("Frame")
+    sidebar.Name = "Sidebar"
+    sidebar.Size = UDim2.new(0, 220, 1, -50)
+    sidebar.Position = UDim2.new(0, 0, 0, 50)
+    sidebar.BackgroundColor3 = ModernTheme.Surface
+    sidebar.BorderSizePixel = 0
+    sidebar.Parent = parent
+    
+    -- Corner
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = sidebar
+    
+    -- Logo/Title area
+    local logoArea = Instance.new("Frame")
+    logoArea.Size = UDim2.new(1, 0, 0, 80)
+    logoArea.BackgroundColor3 = ModernTheme.Primary
+    logoArea.BorderSizePixel = 0
+    logoArea.Parent = sidebar
+    
+    local logoCorner = Instance.new("UICorner")
+    logoCorner.CornerRadius = UDim.new(0, 12)
+    logoCorner.Parent = logoArea
+    
+    -- Logo text
+    local logoText = Instance.new("TextLabel")
+    logoText.Size = UDim2.new(1, -20, 1, 0)
+    logoText.Position = UDim2.new(0, 10, 0, 0)
+    logoText.BackgroundTransparency = 1
+    logoText.Text = self.Title:upper()
+    logoText.TextColor3 = ModernTheme.Background
+    logoText.Font = Enum.Font.GothamBold
+    logoText.TextSize = 18
+    logoText.TextXAlignment = Enum.TextXAlignment.Left
+    logoText.Parent = logoArea
+    
+    -- Version label
+    local versionLabel = Instance.new("TextLabel")
+    versionLabel.Size = UDim2.new(0, 60, 0, 20)
+    versionLabel.Position = UDim2.new(1, -70, 0, 5)
+    versionLabel.BackgroundTransparency = 1
+    versionLabel.Text = "v1.0.0"
+    versionLabel.TextColor3 = ModernTheme.Background
+    versionLabel.Font = Enum.Font.Gotham
+    versionLabel.TextSize = 12
+    versionLabel.TextTransparency = 0.3
+    versionLabel.Parent = logoArea
+    
+    -- Navigation container
+    local navContainer = Instance.new("ScrollingFrame")
+    navContainer.Size = UDim2.new(1, 0, 1, -90)
+    navContainer.Position = UDim2.new(0, 0, 0, 85)
+    navContainer.BackgroundTransparency = 1
+    navContainer.BorderSizePixel = 0
+    navContainer.ScrollBarThickness = 0
+    navContainer.Parent = sidebar
+    
+    local navLayout = Instance.new("UIListLayout")
+    navLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    navLayout.Padding = UDim.new(0, 2)
+    navLayout.Parent = navContainer
+    
+    return {
+        Frame = sidebar,
+        Container = navContainer,
+        Layout = navLayout,
+        Tabs = {}
+    }
+end
+
+-- Content area oluşturma
+function ModernGUI:_createContentArea(parent)
+    local contentArea = Instance.new("Frame")
+    contentArea.Name = "ContentArea"
+    contentArea.Size = UDim2.new(1, -240, 1, -70)
+    contentArea.Position = UDim2.new(0, 230, 0, 60)
+    contentArea.BackgroundColor3 = ModernTheme.SurfaceLight
+    contentArea.BorderSizePixel = 0
+    contentArea.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = contentArea
+    
+    -- Content scroll frame
+    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Size = UDim2.new(1, -20, 1, -20)
+    scrollFrame.Position = UDim2.new(0, 10, 0, 10)
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.BorderSizePixel = 0
+    scrollFrame.ScrollBarThickness = 8
+    scrollFrame.ScrollBarImageColor3 = ModernTheme.Primary
+    scrollFrame.Parent = contentArea
+    
+    local contentLayout = Instance.new("UIListLayout")
+    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    contentLayout.Padding = UDim.new(0, 15)
+    contentLayout.Parent = scrollFrame
+    
+    return {
+        Frame = contentArea,
+        ScrollFrame = scrollFrame,
+        Layout = contentLayout
+    }
+end
+
+-- Top bar oluşturma
+function ModernGUI:_createTopBar(parent)
+    local topBar = Instance.new("Frame")
+    topBar.Name = "TopBar"
+    topBar.Size = UDim2.new(1, 0, 0, 45)
+    topBar.BackgroundColor3 = ModernTheme.Background
+    topBar.BorderSizePixel = 0
+    topBar.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = topBar
+    
+    -- Title
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -150, 1, 0)
+    titleLabel.Position = UDim2.new(0, 20, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = ""
+    titleLabel.TextColor3 = ModernTheme.TextPrimary
+    titleLabel.Font = Enum.Font.GothamSemibold
+    titleLabel.TextSize = 16
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = topBar
+    
+    -- Control buttons
+    local controlsFrame = Instance.new("Frame")
+    controlsFrame.Size = UDim2.new(0, 120, 0, 30)
+    controlsFrame.Position = UDim2.new(1, -130, 0.5, -15)
+    controlsFrame.BackgroundTransparency = 1
+    controlsFrame.Parent = topBar
+    
+    local controlsLayout = Instance.new("UIListLayout")
+    controlsLayout.FillDirection = Enum.FillDirection.Horizontal
+    controlsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    controlsLayout.Padding = UDim.new(0, 5)
+    controlsLayout.Parent = controlsFrame
+    
+    -- Minimize button
+    local minimizeBtn = self:_createControlButton(controlsFrame, "−", ModernTheme.Warning, function()
+        self:_minimizeWindow(parent)
+    end)
+    
+    -- Close button
+    local closeBtn = self:_createControlButton(controlsFrame, "×", ModernTheme.Error, function()
+        self:_closeWindow(parent)
+    end)
+    
+    return {
+        Frame = topBar,
+        Title = titleLabel,
+        Controls = controlsFrame
+    }
+end
+
+-- Tab oluşturma (sidebar'da)
+function ModernGUI:createTab(window, options)
+    options = options or {}
+    local tabData = {
+        Title = options.Title or "Tab",
+        Icon = options.Icon or "📄",
+        Active = options.Active or false
+    }
+    
+    -- Tab button (sidebar'da)
+    local tabButton = Instance.new("TextButton")
+    tabButton.Size = UDim2.new(1, -10, 0, 45)
+    tabButton.Position = UDim2.new(0, 5, 0, 0)
+    tabButton.BackgroundColor3 = tabData.Active and ModernTheme.Primary or Color3.fromRGB(0,0,0)
+    tabButton.BackgroundTransparency = tabData.Active and 0 or 1
+    tabButton.BorderSizePixel = 0
+    tabButton.Text = ""
+    tabButton.Parent = window.Sidebar.Container
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 8)
+    buttonCorner.Parent = tabButton
+    
+    -- Icon
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(0, 30, 1, 0)
+    iconLabel.Position = UDim2.new(0, 15, 0, 0)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Text = tabData.Icon
+    iconLabel.TextColor3 = tabData.Active and ModernTheme.Background or ModernTheme.TextSecondary
+    iconLabel.Font = Enum.Font.Gotham
+    iconLabel.TextSize = 18
+    iconLabel.Parent = tabButton
+    
+    -- Title
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -55, 1, 0)
+    titleLabel.Position = UDim2.new(0, 50, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = tabData.Title
+    titleLabel.TextColor3 = tabData.Active and ModernTheme.Background or ModernTheme.TextSecondary
+    titleLabel.Font = Enum.Font.GothamSemibold
+    titleLabel.TextSize = 14
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = tabButton
+    
+    -- Content frame (content area'da)
+    local tabContent = Instance.new("Frame")
+    tabContent.Size = UDim2.new(1, 0, 1, 0)
+    tabContent.BackgroundTransparency = 1
+    tabContent.Visible = tabData.Active
+    tabContent.Parent = window.Content.ScrollFrame
+    
+    local contentLayout = Instance.new("UIListLayout")
+    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    contentLayout.Padding = UDim.new(0, 15)
+    contentLayout.Parent = tabContent
+    
+    -- Click event
+    tabButton.MouseButton1Click:Connect(function()
+        self:_switchTab(window, tabData.Title)
+    end)
+    
+    -- Hover effects
+    self:_addModernHoverEffect(tabButton, iconLabel, titleLabel, tabData.Active)
+    
+    local tabObj = {
+        Button = tabButton,
+        Content = tabContent,
+        Icon = iconLabel,
+        Title = titleLabel,
+        Data = tabData
+    }
+    
+    table.insert(window.Tabs, tabObj)
+    table.insert(window.Sidebar.Tabs, tabObj)
+    
+    -- İlk tab'ı aktif yap
+    if #window.Tabs == 1 then
+        window.TopBar.Title.Text = tabData.Title
+    end
+    
+    return tabObj
+end
+
+-- Modern button oluşturma
+function ModernGUI:createButton(parent, options)
+    options = options or {}
+    local buttonData = {
+        Text = options.Text or "Button",
+        Icon = options.Icon or "",
+        Style = options.Style or "Primary", -- Primary, Secondary, Success, Warning, Error
+        Size = options.Size or UDim2.new(0, 200, 0, 40),
+        Callback = options.Callback or function() end
+    }
+    
+    local button = Instance.new("TextButton")
+    button.Size = buttonData.Size
+    button.BackgroundColor3 = self:_getButtonColor(buttonData.Style)
+    button.BorderSizePixel = 0
+    button.Text = ""
+    button.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = button
+    
+    -- Gradient
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 230, 230))
+    }
+    gradient.Transparency = NumberSequence.new{
+        NumberSequenceKeypoint.new(0, 0.95),
+        NumberSequenceKeypoint.new(1, 0.9)
+    }
+    gradient.Parent = button
+    
+    -- Icon (if provided)
+    if buttonData.Icon ~= "" then
+        local iconLabel = Instance.new("TextLabel")
+        iconLabel.Size = UDim2.new(0, 25, 1, 0)
+        iconLabel.Position = UDim2.new(0, 15, 0, 0)
+        iconLabel.BackgroundTransparency = 1
+        iconLabel.Text = buttonData.Icon
+        iconLabel.TextColor3 = ModernTheme.TextPrimary
+        iconLabel.Font = Enum.Font.Gotham
+        iconLabel.TextSize = 16
+        iconLabel.Parent = button
+    end
+    
+    -- Text
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, buttonData.Icon ~= "" and -45 or -30, 1, 0)
+    textLabel.Position = UDim2.new(0, buttonData.Icon ~= "" and 40 or 15, 0, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = buttonData.Text
+    textLabel.TextColor3 = ModernTheme.TextPrimary
+    textLabel.Font = Enum.Font.GothamSemibold
+    textLabel.TextSize = 14
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+    textLabel.Parent = button
+    
+    -- Click event
+    button.MouseButton1Click:Connect(function()
+        self:_animateButtonClick(button)
+        buttonData.Callback()
+    end)
+    
+    -- Hover effect
+    self:_addButtonHoverEffect(button)
+    
+    return button
+end
+
+-- Modern toggle oluşturma
+function ModernGUI:createToggle(parent, options)
+    options = options or {}
+    local toggleData = {
+        Text = options.Text or "Toggle",
+        Default = options.Default or false,
+        Callback = options.Callback or function() end
+    }
+    
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 50)
+    container.BackgroundTransparency = 1
+    container.Parent = parent
+    
+    -- Background
+    local background = Instance.new("Frame")
+    background.Size = UDim2.new(1, 0, 1, 0)
+    background.BackgroundColor3 = ModernTheme.Surface
+    background.BorderSizePixel = 0
+    background.Parent = container
+    
+    local bgCorner = Instance.new("UICorner")
+    bgCorner.CornerRadius = UDim.new(0, 8)
+    bgCorner.Parent = background
+    
+    -- Text
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, -80, 1, 0)
+    textLabel.Position = UDim2.new(0, 15, 0, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = toggleData.Text
+    textLabel.TextColor3 = ModernTheme.TextPrimary
+    textLabel.Font = Enum.Font.GothamSemibold
+    textLabel.TextSize = 14
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+    textLabel.Parent = background
+    
+    -- Toggle switch
+    local toggleSwitch = Instance.new("Frame")
+    toggleSwitch.Size = UDim2.new(0, 50, 0, 25)
+    toggleSwitch.Position = UDim2.new(1, -60, 0.5, -12.5)
+    toggleSwitch.BackgroundColor3 = toggleData.Default and ModernTheme.Primary or ModernTheme.Border
+    toggleSwitch.BorderSizePixel = 0
+    toggleSwitch.Parent = background
+    
+    local switchCorner = Instance.new("UICorner")
+    switchCorner.CornerRadius = UDim.new(1, 0)
+    switchCorner.Parent = toggleSwitch
+    
+    -- Toggle knob
+    local toggleKnob = Instance.new("Frame")
+    toggleKnob.Size = UDim2.new(0, 21, 0, 21)
+    toggleKnob.Position = toggleData.Default and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)
+    toggleKnob.BackgroundColor3 = ModernTheme.TextPrimary
+    toggleKnob.BorderSizePixel = 0
+    toggleKnob.Parent = toggleSwitch
+    
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(1, 0)
+    knobCorner.Parent = toggleKnob
+    
+    local isToggled = toggleData.Default
+    
+    -- Click detector
+    local clickDetector = Instance.new("TextButton")
+    clickDetector.Size = UDim2.new(1, 0, 1, 0)
+    clickDetector.BackgroundTransparency = 1
+    clickDetector.Text = ""
+    clickDetector.Parent = background
+    
+    clickDetector.MouseButton1Click:Connect(function()
+        isToggled = not isToggled
+        self:_animateToggle(toggleSwitch, toggleKnob, isToggled)
+        toggleData.Callback(isToggled)
+    end)
+    
+    -- Hover effect
+    self:_addHoverEffect(background)
+    
+    container.GetValue = function() return isToggled end
+    container.SetValue = function(value)
+        isToggled = value
+        self:_animateToggle(toggleSwitch, toggleKnob, isToggled)
+    end
+    
+    return container
+end
+
+-- Modern slider oluşturma
+function ModernGUI:createSlider(parent, options)
+    options = options or {}
+    local sliderData = {
+        Text = options.Text or "Slider",
+        Min = options.Min or 0,
+        Max = options.Max or 100,
+        Default = options.Default or 50,
+        Callback = options.Callback or function() end
+    }
+    
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 70)
+    container.BackgroundTransparency = 1
+    container.Parent = parent
+    
+    -- Background
+    local background = Instance.new("Frame")
+    background.Size = UDim2.new(1, 0, 1, 0)
+    background.BackgroundColor3 = ModernTheme.Surface
+    background.BorderSizePixel = 0
+    background.Parent = container
+    
+    local bgCorner = Instance.new("UICorner")
+    bgCorner.CornerRadius = UDim.new(0, 8)
+    bgCorner.Parent = background
+    
+    -- Title and value
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -80, 0, 25)
+    titleLabel.Position = UDim2.new(0, 15, 0, 10)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = sliderData.Text
+    titleLabel.TextColor3 = ModernTheme.TextPrimary
+    titleLabel.Font = Enum.Font.GothamSemibold
+    titleLabel.TextSize = 14
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = background
+    
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Size = UDim2.new(0, 60, 0, 25)
+    valueLabel.Position = UDim2.new(1, -70, 0, 10)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Text = tostring(sliderData.Default)
+    valueLabel.TextColor3 = ModernTheme.Primary
+    valueLabel.Font = Enum.Font.GothamBold
+    valueLabel.TextSize = 14
+    valueLabel.Parent = background
+    
+    -- Slider track
+    local sliderTrack = Instance.new("Frame")
+    sliderTrack.Size = UDim2.new(1, -30, 0, 6)
+    sliderTrack.Position = UDim2.new(0, 15, 0, 45)
+    sliderTrack.BackgroundColor3 = ModernTheme.Border
+    sliderTrack.BorderSizePixel = 0
+    sliderTrack.Parent = background
+    
+    local trackCorner = Instance.new("UICorner")
+    trackCorner.CornerRadius = UDim.new(1, 0)
+    trackCorner.Parent = sliderTrack
+    
+    -- Slider fill
+    local sliderFill = Instance.new("Frame")
+    sliderFill.Size = UDim2.new((sliderData.Default - sliderData.Min) / (sliderData.Max - sliderData.Min), 0, 1, 0)
+    sliderFill.BackgroundColor3 = ModernTheme.Primary
+    sliderFill.BorderSizePixel = 0
+    sliderFill.Parent = sliderTrack
+    
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(1, 0)
+    fillCorner.Parent = sliderFill
+    
+    -- Slider knob
+    local sliderKnob = Instance.new("Frame")
+    sliderKnob.Size = UDim2.new(0, 18, 0, 18)
+    sliderKnob.Position = UDim2.new((sliderData.Default - sliderData.Min) / (sliderData.Max - sliderData.Min), -9, 0.5, -9)
+    sliderKnob.BackgroundColor3 = ModernTheme.Primary
+    sliderKnob.BorderSizePixel = 0
+    sliderKnob.Parent = sliderTrack
+    
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(1, 0)
+    knobCorner.Parent = sliderKnob
+    
+    -- Glow effect for knob
+    self:_addGlowEffect(sliderKnob, ModernTheme.Primary)
+    
+    local currentValue = sliderData.Default
+    local dragging = false
+    
+    -- Drag functionality
+    local function updateSlider(input)
+        local relativeX = math.clamp((input.Position.X - sliderTrack.AbsolutePosition.X) / sliderTrack.AbsoluteSize.X, 0, 1)
+        currentValue = math.floor(sliderData.Min + (sliderData.Max - sliderData.Min) * relativeX)
+        
+        local tweenInfo = TweenInfo.new(AnimationConfig.HoverSpeed, AnimationConfig.Style, AnimationConfig.Direction)
+        TweenService:Create(sliderFill, tweenInfo, {Size = UDim2.new(relativeX, 0, 1, 0)}):Play()
+        TweenService:Create(sliderKnob, tweenInfo, {Position = UDim2.new(relativeX, -9, 0.5, -9)}):Play()
+        
+        valueLabel.Text = tostring(currentValue)
+        sliderData.Callback(currentValue)
+    end
+    
+    sliderTrack.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            updateSlider(input)
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            updateSlider(input)
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    
+    container.GetValue = function() return currentValue end
+    container.SetValue = function(value)
+        currentValue = math.clamp(value, sliderData.Min, sliderData.Max)
+        local relativeX = (currentValue - sliderData.Min) / (sliderData.Max - sliderData.Min)
+        sliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
+        sliderKnob.Position = UDim2.new(relativeX, -9, 0.5, -9)
+        valueLabel.Text = tostring(currentValue)
+    end
+    
+    return container
+end
+
+-- Modern notification sistemi
+function ModernGUI:createNotification(options)
+    options = options or {}
+    local notifData = {
+        Title = options.Title or "Notification",
+        Text = options.Text or "",
+        Type = options.Type or "Info", -- Info, Success, Warning, Error
+        Duration = options.Duration or 4
+    }
+    
+    local notification = Instance.new("Frame")
+    notification.Size = UDim2.new(0, 350, 0, 90)
+    notification.Position = UDim2.new(1, 370, 0, 20 + #self.Notifications * 100)
+    notification.BackgroundColor3 = ModernTheme.Surface
+    notification.BorderSizePixel = 0
+    notification.Parent = self.ScreenGui
+    
+    local corner = Instance.new("UICorner")
