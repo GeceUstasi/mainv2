@@ -1,6 +1,3 @@
--- VoidX Framework | Professional Roblox UI Library
--- Version: 2.5.0 XENO EDITION FULL
--- All Features + Xeno Optimized
 
 local VoidX = {}
 VoidX.__index = VoidX
@@ -242,7 +239,7 @@ function VoidX:CreateWindow(options)
         Size = UDim2.new(1, 0, 0, 15),
         Position = UDim2.new(0, 0, 0, 45),
         BackgroundTransparency = 1,
-        Text = "v2.5 XENO",
+        Text = "v2.5 UI",
         TextColor3 = window.Theme.TextDim,
         TextSize = 11,
         Font = Config.Font
