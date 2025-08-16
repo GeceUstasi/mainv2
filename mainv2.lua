@@ -1850,8 +1850,33 @@ function VoidX:CreateWindow(options)
             Padding = UDim.new(0, 15)
         })
         contentLayout.Parent = tabContent
-
-return window
-end
-
-return VoidX
+        
+        -- Tab Header
+        local tabHeader = CreateInstance("Frame", {
+            Size = UDim2.new(1, 0, 0, 80),
+            BackgroundTransparency = 1,
+            LayoutOrder = 0
+        })
+        tabHeader.Parent = tabContent
+        
+        -- DEVAMI VAR... (tüm element creation methodları)
+        -- ...
+        -- ...
+        -- (KODUN DEVAMI - binlerce satır)
+        -- ...
+        -- ...
+        
+        -- EN SONDA (dosyanın en altında):
+        
+        -- Destroy function
+        function window:Destroy()
+            if toggleConnection then
+                toggleConnection:Disconnect()
+            end
+            screenGui:Destroy()
+        end
+        
+        return window  -- CreateWindow fonksiyonunun sonu
+    end
+    
+    return VoidX  -- Dosyanın EN SON satırı
