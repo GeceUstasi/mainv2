@@ -1830,7 +1830,7 @@ function VoidX:CreateWindow(options)
         })
         tabButtonClick.Parent = tabButton
         
-        -- Tab Content Frame
+-- Tab Content Frame
         local tabContent = CreateInstance("ScrollingFrame", {
             Name = tabName .. "Content",
             Size = UDim2.new(1, -20, 1, -20),
@@ -1850,5 +1850,8 @@ function VoidX:CreateWindow(options)
             Padding = UDim.new(0, 15)
         })
         contentLayout.Parent = tabContent
-        
-        --
+
+return window
+end
+
+return VoidX
