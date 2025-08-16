@@ -1,4 +1,366 @@
--- Tab Header
+-- VoidX Framework | Professional Roblox UI Library
+-- Version: 2.5.0 XENO EDITION FULL
+-- All Features + Xeno Optimized
+
+local VoidX = {}
+VoidX.__index = VoidX
+
+-- Services
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Get proper GUI parent for executors
+local function GetGuiParent()
+    local success, result = pcall(function()
+        return game:GetService("CoreGui")
+    end)
+    
+    if success then
+        return result
+    else
+        return LocalPlayer:WaitForChild("PlayerGui")
+    end
+end
+
+local GuiParent = GetGuiParent()
+
+-- Destroy existing GUIs and stop all functions
+for _, gui in pairs(GuiParent:GetChildren()) do
+    if gui.Name and gui.Name:find("VoidX") then
+        gui:Destroy()
+    end
+end
+
+-- Configuration
+local Config = {
+    Themes = {
+        Night = {
+            Background = Color3.fromRGB(26, 26, 46),
+            Secondary = Color3.fromRGB(15, 15, 25),
+            Accent = Color3.fromRGB(102, 126, 234),
+            AccentDark = Color3.fromRGB(118, 75, 162),
+            Text = Color3.fromRGB(255, 255, 255),
+            TextDim = Color3.fromRGB(180, 180, 180),
+            Border = Color3.fromRGB(40, 40, 60),
+            Toggle = Color3.fromRGB(102, 126, 234),
+            ContentBG = Color3.fromRGB(20, 20, 35)
+        },
+        Ocean = {
+            Background = Color3.fromRGB(0, 31, 63),
+            Secondary = Color3.fromRGB(0, 20, 40),
+            Accent = Color3.fromRGB(0, 119, 190),
+            AccentDark = Color3.fromRGB(0, 77, 122),
+            Text = Color3.fromRGB(255, 255, 255),
+            TextDim = Color3.fromRGB(180, 200, 220),
+            Border = Color3.fromRGB(0, 50, 80),
+            Toggle = Color3.fromRGB(0, 150, 200),
+            ContentBG = Color3.fromRGB(0, 25, 50)
+        },
+        Sunset = {
+            Background = Color3.fromRGB(44, 24, 16),
+            Secondary = Color3.fromRGB(30, 15, 10),
+            Accent = Color3.fromRGB(255, 107, 107),
+            AccentDark = Color3.fromRGB(78, 205, 196),
+            Text = Color3.fromRGB(255, 255, 255),
+            TextDim = Color3.fromRGB(220, 180, 180),
+            Border = Color3.fromRGB(60, 30, 20),
+            Toggle = Color3.fromRGB(255, 120, 120),
+            ContentBG = Color3.fromRGB(35, 20, 13)
+        },
+        Forest = {
+            Background = Color3.fromRGB(10, 31, 27),
+            Secondary = Color3.fromRGB(6, 20, 17),
+            Accent = Color3.fromRGB(19, 78, 74),
+            AccentDark = Color3.fromRGB(6, 95, 70),
+            Text = Color3.fromRGB(255, 255, 255),
+            TextDim = Color3.fromRGB(180, 220, 180),
+            Border = Color3.fromRGB(20, 50, 45),
+            Toggle = Color3.fromRGB(40, 150, 120),
+            ContentBG = Color3.fromRGB(8, 25, 22)
+        }
+    },
+    AnimationSpeed = 0.3,
+    EasingStyle = Enum.EasingStyle.Quart,
+    Font = Enum.Font.Gotham,
+    FontBold = Enum.Font.GothamBold,
+    ToggleKey = Enum.KeyCode.RightShift
+}
+
+-- Utility Functions
+local function CreateTween(instance, properties, duration)
+    duration = duration or Config.AnimationSpeed
+    local tween = TweenService:Create(
+        instance,
+        TweenInfo.new(duration, Config.EasingStyle, Enum.EasingDirection.Out),
+        properties
+    )
+    tween:Play()
+    return tween
+end
+
+local function CreateInstance(className, properties, parent)
+    local success, instance = pcall(function()
+        local obj = Instance.new(className)
+        for prop, value in pairs(properties or {}) do
+            if prop ~= "Parent" then
+                obj[prop] = value
+            end
+        end
+        return obj
+    end)
+    
+    if success and instance then
+        if parent then
+            instance.Parent = parent
+        end
+        return instance
+    else
+        warn("Failed to create instance:", className)
+        return nil
+    end
+end
+
+local function MakeDraggable(frame, handle)
+    local dragging, dragInput, dragStart, startPos
+    
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+    
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    handle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+-- Main Window Constructor
+function VoidX:CreateWindow(options)
+    options = options or {}
+    local windowName = options.Name or "VoidX Framework"
+    local windowTheme = options.Theme or "Night"
+    local windowSize = options.Size or UDim2.new(0, 900, 0, 600)
+    
+    local window = {}
+    window.Theme = Config.Themes[windowTheme]
+    window.Tabs = {}
+    window.ActiveTab = nil
+    
+    -- Create ScreenGui
+    local screenGui = CreateInstance("ScreenGui", {
+        Name = "VoidX_MainGUI",
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+        ResetOnSpawn = false,
+        IgnoreGuiInset = true
+    })
+    
+    screenGui.Parent = GuiParent
+    
+    -- Main Frame
+    local mainFrame = CreateInstance("Frame", {
+        Name = "MainFrame",
+        Size = windowSize,
+        Position = UDim2.new(0.5, -windowSize.X.Offset/2, 0.5, -windowSize.Y.Offset/2),
+        BackgroundColor3 = window.Theme.Background,
+        BorderSizePixel = 0,
+        ClipsDescendants = true,
+        Active = true
+    })
+    mainFrame.Parent = screenGui
+    
+    CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 20)
+    }, mainFrame)
+    
+    -- Sidebar
+    local sidebar = CreateInstance("Frame", {
+        Name = "Sidebar",
+        Size = UDim2.new(0, 250, 1, 0),
+        Position = UDim2.new(0, 0, 0, 0),
+        BackgroundColor3 = window.Theme.Secondary,
+        BorderSizePixel = 0
+    })
+    sidebar.Parent = mainFrame
+    
+    CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 20)
+    }, sidebar)
+    
+    -- Logo Section
+    local logoSection = CreateInstance("Frame", {
+        Name = "LogoSection",
+        Size = UDim2.new(1, -30, 0, 80),
+        Position = UDim2.new(0, 15, 0, 15),
+        BackgroundTransparency = 1
+    })
+    logoSection.Parent = sidebar
+    
+    local logoText = CreateInstance("TextLabel", {
+        Name = "Logo",
+        Size = UDim2.new(1, 0, 0, 35),
+        Position = UDim2.new(0, 0, 0, 10),
+        BackgroundTransparency = 1,
+        Text = windowName,
+        TextColor3 = window.Theme.Accent,
+        TextScaled = true,
+        Font = Config.FontBold
+    })
+    logoText.Parent = logoSection
+    
+    local versionLabel = CreateInstance("TextLabel", {
+        Name = "Version",
+        Size = UDim2.new(1, 0, 0, 15),
+        Position = UDim2.new(0, 0, 0, 45),
+        BackgroundTransparency = 1,
+        Text = "v2.5 XENO",
+        TextColor3 = window.Theme.TextDim,
+        TextSize = 11,
+        Font = Config.Font
+    })
+    versionLabel.Parent = logoSection
+    
+    -- Tab Container
+    local tabContainer = CreateInstance("ScrollingFrame", {
+        Name = "TabContainer",
+        Size = UDim2.new(1, -30, 1, -100),
+        Position = UDim2.new(0, 15, 0, 100),
+        BackgroundTransparency = 1,
+        ScrollBarThickness = 4,
+        ScrollBarImageColor3 = window.Theme.Accent,
+        BorderSizePixel = 0,
+        CanvasSize = UDim2.new(0, 0, 0, 0),
+        ScrollingDirection = Enum.ScrollingDirection.Y
+    })
+    tabContainer.Parent = sidebar
+    
+    CreateInstance("UIListLayout", {
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 5)
+    }, tabContainer)
+    
+    -- Content Area
+    local contentArea = CreateInstance("Frame", {
+        Name = "ContentArea",
+        Size = UDim2.new(1, -260, 1, -20),
+        Position = UDim2.new(0, 260, 0, 10),
+        BackgroundColor3 = window.Theme.ContentBG,
+        BackgroundTransparency = 0.3,
+        BorderSizePixel = 0
+    })
+    contentArea.Parent = mainFrame
+    
+    CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 15)
+    }, contentArea)
+    
+    -- Make window draggable
+    MakeDraggable(mainFrame, logoSection)
+    
+    -- Tab Creation Method
+    function window:CreateTab(tabName, tabIcon)
+        local tab = {}
+        tab.Name = tabName
+        tab.Elements = {}
+        
+        -- Tab Button
+        local tabButton = CreateInstance("Frame", {
+            Name = tabName .. "Tab",
+            Size = UDim2.new(1, 0, 0, 45),
+            BackgroundColor3 = window.Theme.Background,
+            BackgroundTransparency = 1
+        })
+        tabButton.Parent = tabContainer
+        
+        CreateInstance("UICorner", {
+            CornerRadius = UDim.new(0, 12)
+        }, tabButton)
+        
+        local tabLabel = CreateInstance("TextLabel", {
+            Name = "TabLabel",
+            Size = UDim2.new(1, -50, 1, 0),
+            Position = UDim2.new(0, 45, 0, 0),
+            BackgroundTransparency = 1,
+            Text = tabName,
+            TextColor3 = window.Theme.TextDim,
+            TextSize = 14,
+            Font = Config.Font,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        tabLabel.Parent = tabButton
+        
+        if tabIcon then
+            local iconLabel = CreateInstance("TextLabel", {
+                Size = UDim2.new(0, 20, 0, 20),
+                Position = UDim2.new(0, 15, 0.5, -10),
+                BackgroundTransparency = 1,
+                Text = tabIcon,
+                TextColor3 = window.Theme.TextDim,
+                TextSize = 20,
+                Font = Config.Font
+            })
+            iconLabel.Parent = tabButton
+        end
+        
+        local tabButtonClick = CreateInstance("TextButton", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = "",
+            TextTransparency = 1
+        })
+        tabButtonClick.Parent = tabButton
+        
+        -- Tab Content Frame
+        local tabContent = CreateInstance("ScrollingFrame", {
+            Name = tabName .. "Content",
+            Size = UDim2.new(1, -20, 1, -20),
+            Position = UDim2.new(0, 10, 0, 10),
+            BackgroundTransparency = 1,
+            Visible = false,
+            ScrollBarThickness = 4,
+            ScrollBarImageColor3 = window.Theme.Accent,
+            BorderSizePixel = 0,
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            ScrollingDirection = Enum.ScrollingDirection.Y
+        })
+        tabContent.Parent = contentArea
+        
+        local contentLayout = CreateInstance("UIListLayout", {
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 15)
+        })
+        contentLayout.Parent = tabContent
+        
+        -- Tab Header
         local tabHeader = CreateInstance("Frame", {
             Size = UDim2.new(1, 0, 0, 80),
             BackgroundTransparency = 1,
@@ -251,8 +613,7 @@
             
             updateToggle()
             
-            local element = {
-                Name = toggleName,
+            return {
                 SetValue = function(value)
                     toggled = value
                     updateToggle()
@@ -261,9 +622,6 @@
                     return toggled
                 end
             }
-            
-            table.insert(tab.Elements, element)
-            return element
         end
         
         -- Slider Element
@@ -381,8 +739,7 @@
             
             updateSlider(sliderDefault)
             
-            local element = {
-                Name = sliderName,
+            return {
                 SetValue = function(value)
                     updateSlider(value)
                 end,
@@ -390,9 +747,6 @@
                     return currentValue
                 end
             }
-            
-            table.insert(tab.Elements, element)
-            return element
         end
         
         -- Button Element
@@ -567,8 +921,7 @@
                 end
             end)
             
-            local element = {
-                Name = dropdownName,
+            return {
                 SetOption = function(option)
                     currentOption = option
                     dropdownLabel.Text = option
@@ -580,9 +933,6 @@
                     return currentOption
                 end
             }
-            
-            table.insert(tab.Elements, element)
-            return element
         end
         
         -- Input Element
@@ -642,8 +992,7 @@
                 end)
             end)
             
-            local element = {
-                Name = inputName,
+            return {
                 GetText = function()
                     return inputBox.Text
                 end,
@@ -651,9 +1000,6 @@
                     inputBox.Text = text
                 end
             }
-            
-            table.insert(tab.Elements, element)
-            return element
         end
         
         -- Color Picker Element
@@ -737,8 +1083,7 @@
                 end)
             end)
             
-            local element = {
-                Name = colorName,
+            return {
                 SetColor = function(color)
                     colorDisplay.BackgroundColor3 = color
                     pcall(function()
@@ -749,9 +1094,6 @@
                     return colorDisplay.BackgroundColor3
                 end
             }
-            
-            table.insert(tab.Elements, element)
-            return element
         end
         
         -- Prompt Element (Dialog)
@@ -971,106 +1313,17 @@
         notif:Destroy()
     end
     
-    -- Config System
-    function window:SaveConfig(configName)
-        local config = {}
-        for _, tab in pairs(window.Tabs) do
-            if tab.Elements then
-                config[tab.Name] = {}
-                for _, element in pairs(tab.Elements) do
-                    if element.GetValue then
-                        config[tab.Name][element.Name] = element.GetValue()
-                    elseif element.GetOption then
-                        config[tab.Name][element.Name] = element.GetOption()
-                    elseif element.GetText then
-                        config[tab.Name][element.Name] = element.GetText()
-                    elseif element.GetColor then
-                        config[tab.Name][element.Name] = {
-                            R = element.GetColor().R,
-                            G = element.GetColor().G,
-                            B = element.GetColor().B
-                        }
-                    end
-                end
-            end
-        end
-        
-        GlobalSettings.ConfigSystem.Configs[configName] = config
-        GlobalSettings.ConfigSystem.CurrentConfig = configName
-        
-        -- Save to file if supported
-        if writefile then
-            pcall(function()
-                writefile("VoidX_Config_" .. configName .. ".json", HttpService:JSONEncode(config))
-            end)
-        end
-        
-        return config
-    end
-    
-    function window:LoadConfig(configName)
-        local config
-        
-        -- Try to load from file
-        if readfile and isfile then
-            pcall(function()
-                if isfile("VoidX_Config_" .. configName .. ".json") then
-                    config = HttpService:JSONDecode(readfile("VoidX_Config_" .. configName .. ".json"))
-                end
-            end)
-        end
-        
-        if not config then
-            config = GlobalSettings.ConfigSystem.Configs[configName]
-        end
-        
-        if config then
-            for tabName, elements in pairs(config) do
-                for _, tab in pairs(window.Tabs) do
-                    if tab.Name == tabName and tab.Elements then
-                        for elementName, value in pairs(elements) do
-                            for _, element in pairs(tab.Elements) do
-                                if element.Name == elementName then
-                                    if element.SetValue then
-                                        element.SetValue(value)
-                                    elseif element.SetOption then
-                                        element.SetOption(value)
-                                    elseif element.SetText then
-                                        element.SetText(value)
-                                    elseif element.SetColor and type(value) == "table" then
-                                        element.SetColor(Color3.new(value.R, value.G, value.B))
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-            
-            GlobalSettings.ConfigSystem.CurrentConfig = configName
-        end
-    end
-    
     -- Toggle UI Visibility
     local isVisible = true
-    local toggleConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if not gameProcessed and input.KeyCode == Config.ToggleKey then
             isVisible = not isVisible
             mainFrame.Visible = isVisible
         end
     end)
     
-    -- Store connection for cleanup
-    if getgenv then
-        getgenv().VoidXConnections = getgenv().VoidXConnections or {}
-        table.insert(getgenv().VoidXConnections, toggleConnection)
-    end
-    
     -- Destroy function
     function window:Destroy()
-        if toggleConnection then
-            toggleConnection:Disconnect()
-        end
         screenGui:Destroy()
     end
     
