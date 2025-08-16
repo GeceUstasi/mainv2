@@ -1,59 +1,59 @@
 # VoidX Framework (mainv2.lua)
 
 **VoidX Framework – Professional Roblox UI Library v2.5.0 (XENO EDITION)**  
-Roblox üzerinde modern, tema destekli, sürüklenebilir ve modüler UI (arayüz) oluşturmak için geliştirilmiş bir framework’tür.
+A modern, theme-supported, draggable, and modular UI (user interface) framework for Roblox.
 
 ---
 
-## 🔹 Başlangıç
+## 🔹 Getting Started
 
-Framework’ü projene eklemek için:
+Include the framework in your project with:
 
 ```lua
 local VoidX = loadstring(game:HttpGet("https://raw.githubusercontent.com/GeceUstasi/mainv2/refs/heads/main/mainv2.lua"))()
 ```
 
-Artık `VoidX` üzerinden UI pencereleri oluşturabilirsin.
+Now you can create UI windows via `VoidX`.
 
 ---
 
-## 🔹 Pencere Oluşturma
+## 🔹 Create a Window
 
 ```lua
 local Window = VoidX:CreateWindow({
-    Title = "Test Penceresi",
+    Title = "Test Window",
     Theme = "Night", -- Night, Ocean, Sunset, Forest
     Size = UDim2.new(0, 600, 0, 400),
     ToggleKey = Enum.KeyCode.RightShift
 })
 ```
 
-Bu kod bir pencere oluşturur. **RightShift** tuşu ile açılıp kapanabilir.
+This will create a window. You can toggle it using the **RightShift** key.
 
 ---
 
-## 🔹 Sekme Ekleme
+## 🔹 Create Tabs
 
 ```lua
-local Tab1 = Window:CreateTab("Genel", "🏠")
-local Tab2 = Window:CreateTab("Ayarlar", "⚙️")
+local Tab1 = Window:CreateTab("Home", "🏠")
+local Tab2 = Window:CreateTab("Settings", "⚙️")
 ```
 
-Her sekme kendi içinde elementler barındırır.
+Each tab can hold its own UI elements.
 
 ---
 
-## 🔹 Bölüm (Section) Ekleme
+## 🔹 Create Section
 
 ```lua
-local Section = Tab1:CreateSection("Kontroller")
+local Section = Tab1:CreateSection("Controls")
 ```
 
-Bölüm, UI elementlerini gruplamak için kullanılır.
+Sections group UI elements together.
 
 ---
 
-## 🔹 UI Elementleri
+## 🔹 UI Elements
 
 ### ✅ Toggle
 ```lua
@@ -66,8 +66,8 @@ end)
 
 ### 🎚️ Slider
 ```lua
-Section:CreateSlider("Hız", 0, 100, 50, function(value)
-    print("Hız: ", value)
+Section:CreateSlider("Speed", 0, 100, 50, function(value)
+    print("Speed: ", value)
 end)
 ```
 
@@ -75,8 +75,8 @@ end)
 
 ### 🔘 Button
 ```lua
-Section:CreateButton("Çalıştır", function()
-    print("Butona basıldı!")
+Section:CreateButton("Run", function()
+    print("Button pressed!")
 end)
 ```
 
@@ -84,8 +84,8 @@ end)
 
 ### 📂 Dropdown
 ```lua
-Section:CreateDropdown("Silah Seç", {"Kılıç", "Tabanca", "Ok"}, function(selected)
-    print("Seçilen: ", selected)
+Section:CreateDropdown("Choose Weapon", {"Sword", "Gun", "Bow"}, function(selected)
+    print("Selected: ", selected)
 end)
 ```
 
@@ -93,8 +93,8 @@ end)
 
 ### 📝 Input
 ```lua
-Section:CreateInput("İsim Gir", function(text)
-    print("Kullanıcı yazdı: ", text)
+Section:CreateInput("Enter Name", function(text)
+    print("User typed: ", text)
 end)
 ```
 
@@ -102,61 +102,61 @@ end)
 
 ### 🎨 Color Picker
 ```lua
-Section:CreateColorPicker("Renk Seç", Color3.fromRGB(255, 0, 0), function(color)
-    print("Renk seçildi: ", color)
+Section:CreateColorPicker("Pick Color", Color3.fromRGB(255, 0, 0), function(color)
+    print("Color selected: ", color)
 end)
 ```
 
 ---
 
-### ⚠️ Prompt (Onay Kutusu)
+### ⚠️ Prompt (Confirmation Box)
 ```lua
-Section:CreatePrompt("Emin misin?", function(yes)
+Section:CreatePrompt("Are you sure?", function(yes)
     if yes then
-        print("Kabul edildi.")
+        print("Confirmed.")
     else
-        print("İptal edildi.")
+        print("Cancelled.")
     end
 end)
 ```
 
 ---
 
-## 🔹 Bildirim Gösterme
+## 🔹 Show Notification
 ```lua
 VoidX:CreateNotification({
-    Title = "Başarılı",
-    Text = "İşlem tamamlandı!",
+    Title = "Success",
+    Text = "Operation completed!",
     Duration = 3
 })
 ```
 
-3 saniyelik popup bildirimi.
+Displays a popup notification for 3 seconds.
 
 ---
 
-## 🔹 Tema Değiştirme
+## 🔹 Change Theme
 ```lua
 VoidX:ChangeTheme("Ocean")
 ```
 
-Mevcut temalar: `Night`, `Ocean`, `Sunset`, `Forest`.
+Available themes: `Night`, `Ocean`, `Sunset`, `Forest`.
 
 ---
 
-## 🔹 UI Kapatma
+## 🔹 Destroy UI
 ```lua
 VoidX:Destroy()
 ```
 
 ---
 
-## 📝 Özet
+## 📝 Summary
 
-- `CreateWindow` → Ana pencere oluşturur  
-- `CreateTab` → Sekme ekler  
-- `CreateSection` → Bölüm ekler  
-- **Elementler:** Toggle, Slider, Button, Dropdown, Input, ColorPicker, Prompt  
-- `CreateNotification` → Bildirim gösterir  
-- `ChangeTheme` → Tema değiştirir  
-- `Destroy` → UI’yı kapatır  
+- `CreateWindow` → Creates a main window  
+- `CreateTab` → Adds a tab  
+- `CreateSection` → Adds a section  
+- **Elements:** Toggle, Slider, Button, Dropdown, Input, ColorPicker, Prompt  
+- `CreateNotification` → Shows a notification  
+- `ChangeTheme` → Switches theme  
+- `Destroy` → Closes the UI  
