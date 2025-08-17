@@ -20,7 +20,7 @@ A professional and feature-rich UI library for Roblox with advanced animations, 
 ## 📦 Installation
 
 ```lua
-local VoidX = loadstring(game:HttpGet("https://raw.githubusercontent.com/yourusername/VoidX/main/source.lua"))()
+local VoidX = loadstring(game:HttpGet("https://raw.githubusercontent.com/GeceUstasi/voidx/refs/heads/main/voidxsource.lua"))()
 🚀 Quick Start
 Basic Window Creation
 lualocal VoidX = loadstring(game:HttpGet("..."))()
