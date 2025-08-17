@@ -308,13 +308,39 @@ function VoidX:CreateKeySystem(options)
     local keySystemSubtitle = options.Subtitle or "Enter your key to access"
     local keySystemNote = options.Note or "Get key from our Discord"
     local correctKey = options.Key or {"VoidX-Free-Key-2024"}
+    local keyURL = options.KeyURL or nil  -- URL'den key çekme
     local saveKey = options.SaveKey ~= false
     local keyLink = options.KeyLink or nil
     local onSuccess = options.OnSuccess or function() end
     
     Config.KeySystem.Enabled = true
-    Config.KeySystem.Key = type(correctKey) == "table" and correctKey or {correctKey}
     Config.KeySystem.SaveKey = saveKey
+    
+    -- URL'den key çek
+    local validKeys = {}
+    if keyURL then
+        local success, response = pcall(function()
+            return game:HttpGet(keyURL)
+        end)
+        
+        if success and response then
+            -- Her satırı ayrı bir key olarak al
+            for line in response:gmatch("[^\r\n]+") do
+                local trimmedLine = line:match("^%s*(.-)%s*$") -- Trim whitespace
+                if trimmedLine and trimmedLine ~= "" then
+                    table.insert(validKeys, trimmedLine)
+                end
+            end
+        else
+            warn("Failed to fetch keys from URL:", keyURL)
+            -- Fallback to provided keys
+            validKeys = type(correctKey) == "table" and correctKey or {correctKey}
+        end
+    else
+        validKeys = type(correctKey) == "table" and correctKey or {correctKey}
+    end
+    
+    Config.KeySystem.Key = validKeys
     
     -- Check saved key
     if saveKey and readfile and isfile then
@@ -324,7 +350,7 @@ function VoidX:CreateKeySystem(options)
             for _, key in pairs(Config.KeySystem.Key) do
                 if savedKey == key then
                     onSuccess()
-                    return
+                    return true -- Key doğru, UI yüklenebilir
                 end
             end
         end
@@ -473,6 +499,9 @@ function VoidX:CreateKeySystem(options)
     keyFrame.Position = UDim2.new(0.5, -225, 0.5, -200)
     CreateTween(keyFrame, {Position = UDim2.new(0.5, -225, 0.5, -150)}, 0.5, Enum.EasingStyle.Back)
     
+    -- Key doğrulandı flag'i
+    local keyVerified = false
+    
     -- Key System Logic
     submitButton.MouseButton1Click:Connect(function()
         local enteredKey = keyInput.Text
@@ -486,6 +515,8 @@ function VoidX:CreateKeySystem(options)
         end
         
         if isValid then
+            keyVerified = true
+            
             -- Save key if enabled
             if saveKey and writefile then
                 writefile(Config.KeySystem.FileName .. ".txt", enteredKey)
@@ -560,6 +591,13 @@ function VoidX:CreateKeySystem(options)
     end)
     
     MakeDraggable(keyFrame, keyTitle)
+    
+    -- Key doğrulanana kadar bekle
+    while not keyVerified do
+        wait(0.1)
+    end
+    
+    return true -- Key doğrulandı
 end
 
 -- Main Window Constructor
