@@ -597,7 +597,7 @@ function VoidX:CreateKeySystem(options)
         wait(0.1)
     end
     
-    return true -- Key doğrulandı
+    return true
 end
 
 -- Main Window Constructor
