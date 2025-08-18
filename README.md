@@ -2,9 +2,9 @@
 
 <div align="center">
 
-![VoidX Banner](https://img.shields.io/badge/VoidX-Framework-667EEA?style=for-the-badge&logo=roblox&logoColor=white)
-![Version](https://img.shields.io/badge/Version-3.0-00D9FF?style=for-the-badge)
-![Lua](https://img.shields.io/badge/Lua-5.1+-2C2D72?style=for-the-badge&logo=lua)
+![Show Image](#)  
+![Show Image](#)  
+![Show Image](#)  
 
 **Professional Roblox UI Library with Advanced Features**  
 
@@ -82,8 +82,6 @@ local Tab = Window:CreateTab("Main", "🏠")
 ## 📚 Documentation
 
 ### 🔑 Key System
-<details>
-<summary><b>Click to expand</b></summary>
 
 #### Basic Key System
 ```lua
@@ -121,14 +119,11 @@ premium-key-abc
 test-key-123
 ```
 
-</details>
-
 ---
 
 ### 🎛️ UI Elements
-<details>
-<summary><b>Toggle</b></summary>
 
+#### Toggle
 ```lua
 local Toggle = Tab:CreateToggle({
     Name = "Auto Farm",
@@ -144,11 +139,8 @@ local Toggle = Tab:CreateToggle({
 Toggle:SetValue(true)
 local isEnabled = Toggle:GetValue()
 ```
-</details>
 
-<details>
-<summary><b>Button</b></summary>
-
+#### Button
 ```lua
 local Button = Tab:CreateButton({
     Name = "Click Me!",
@@ -160,11 +152,8 @@ local Button = Tab:CreateButton({
 -- Methods
 Button:SetText("New Text")
 ```
-</details>
 
-<details>
-<summary><b>Slider</b></summary>
-
+#### Slider
 ```lua
 local Slider = Tab:CreateSlider({
     Name = "Walk Speed",
@@ -181,9 +170,115 @@ local Slider = Tab:CreateSlider({
 Slider:SetValue(50)
 local currentValue = Slider:GetValue()
 ```
-</details>
 
-*(📌 diğer UI elementleri de aynı formatta eklenmiştir)*  
+#### Dropdown
+```lua
+local Dropdown = Tab:CreateDropdown({
+    Name = "Select Weapon",
+    Options = {"Sword", "Gun", "Bow"},
+    Default = "Sword",
+    Callback = function(option)
+        print("Selected:", option)
+    end
+})
+
+-- Methods
+Dropdown:SetValue("Gun")
+local selected = Dropdown:GetValue()
+```
+
+#### Input
+```lua
+local Input = Tab:CreateInput({
+    Name = "Enter Name",
+    PlaceholderText = "Type here...",
+    Callback = function(text)
+        print("Input:", text)
+    end
+})
+
+-- Methods
+Input:SetText("VoidX")
+local currentText = Input:GetValue()
+```
+
+#### Keybind
+```lua
+local Keybind = Tab:CreateKeybind({
+    Name = "Open Menu",
+    Default = Enum.KeyCode.RightShift,
+    Callback = function()
+        print("Menu toggled!")
+    end
+})
+
+-- Methods
+Keybind:SetKey(Enum.KeyCode.LeftControl)
+```
+
+#### Color Picker
+```lua
+local ColorPicker = Tab:CreateColorPicker({
+    Name = "ESP Color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(color)
+        print("Selected color:", color)
+    end
+})
+
+-- Methods
+ColorPicker:SetValue(Color3.fromRGB(0, 255, 0))
+local currentColor = ColorPicker:GetValue()
+```
+
+#### Player Search
+```lua
+local PlayerSearch = Tab:CreatePlayerSearch({
+    Name = "Select Player",
+    Callback = function(player)
+        print("Selected player:", player)
+    end
+})
+```
+
+#### General Search
+```lua
+local Search = Tab:CreateSearch({
+    Name = "Find Item",
+    List = {"Item1", "Item2", "Item3"},
+    Callback = function(item)
+        print("Found:", item)
+    end
+})
+```
+
+#### Section & Label
+```lua
+local Section = Tab:CreateSection("Main Features")
+
+local Label = Tab:CreateLabel("Status: Ready")
+Label:SetText("Status: Running")
+```
+
+#### Notification
+```lua
+VoidX:Notify({
+    Title = "Success",
+    Description = "Script loaded successfully!",
+    Duration = 5
+})
+```
+
+#### Config
+```lua
+Window:SaveConfig()
+Window:LoadConfig()
+```
+
+#### Theme
+```lua
+Window:SetTheme("Ocean") -- Available: Night, Ocean, Sunset, Forest, Midnight, Crimson, Arctic, Neon
+```
 
 ---
 
@@ -195,14 +290,10 @@ local currentValue = Slider:GetValue()
 ---
 
 ## 🛠️ Troubleshooting
-<details>
-<summary><b>Common Issues & Fixes</b></summary>
 
 - **UI Not Showing:** check key system  
 - **Shift Lock Conflict:** change toggle key  
 - **Config Not Saving:** ensure executor supports `writefile`  
-
-</details>
 
 ---
 
