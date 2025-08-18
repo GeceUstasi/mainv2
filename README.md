@@ -2,9 +2,9 @@
 
 <div align="center">
 
-![Show Image](#)  
-![Show Image](#)  
-![Show Image](#)  
+![VoidX Banner](https://img.shields.io/badge/VoidX-Framework-667EEA?style=for-the-badge&logo=roblox&logoColor=white)
+![Version](https://img.shields.io/badge/Version-3.0-00D9FF?style=for-the-badge)
+![Lua](https://img.shields.io/badge/Lua-5.1+-2C2D72?style=for-the-badge&logo=lua)
 
 **Professional Roblox UI Library with Advanced Features**  
 
