@@ -2880,8 +2880,410 @@ function VoidX:CreateWindow(options)
             return element
         end
         
-        -- Search Element (General Search)
+        -- Search Element (Advanced - Dropdown + Search + Auto-Refresh)
         function tab:CreateSearch(options)
+            options = options or {}
+            local searchName = options.Name or "Search"
+            local searchList = options.List or {}
+            local searchCallback = options.Callback or function() end
+            local searchPlaceholder = options.Placeholder or "Click to select or type to search..."
+            local getItems = options.GetItems or nil -- Function to get updated items
+            local autoRefresh = options.AutoRefresh or false -- Enable auto-refresh
+            local refreshInterval = options.RefreshInterval or 5 -- Refresh interval in seconds
+            
+            local searchFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 50),
+                BackgroundColor3 = window.Theme.Background,
+                BackgroundTransparency = 0.7,
+                ClipsDescendants = true,
+                LayoutOrder = 107
+            })
+            searchFrame.Parent = tabContent
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 12)
+            }, searchFrame)
+            
+            -- Search input box
+            local searchBox = CreateInstance("TextBox", {
+                Size = UDim2.new(1, -80, 0, 30),
+                Position = UDim2.new(0, 20, 0, 10),
+                BackgroundColor3 = window.Theme.Secondary,
+                BorderSizePixel = 0,
+                Text = "",
+                PlaceholderText = searchPlaceholder,
+                PlaceholderColor3 = window.Theme.TextDim,
+                TextColor3 = window.Theme.Text,
+                TextSize = 13,
+                Font = Config.Font,
+                ClearTextOnFocus = false
+            })
+            searchBox.Parent = searchFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 8)
+            }, searchBox)
+            
+            -- Dropdown arrow
+            local dropdownArrow = CreateInstance("TextLabel", {
+                Size = UDim2.new(0, 20, 0, 20),
+                Position = UDim2.new(1, -35, 0, 15),
+                BackgroundTransparency = 1,
+                Text = "▼",
+                TextColor3 = window.Theme.TextDim,
+                TextSize = 12,
+                Font = Config.Font
+            })
+            dropdownArrow.Parent = searchFrame
+            
+            -- Item count label
+            local itemCount = CreateInstance("TextLabel", {
+                Size = UDim2.new(0, 40, 0, 20),
+                Position = UDim2.new(1, -75, 0, 15),
+                BackgroundTransparency = 1,
+                Text = "(" .. #searchList .. ")",
+                TextColor3 = window.Theme.Accent,
+                TextSize = 11,
+                Font = Config.Font
+            })
+            itemCount.Parent = searchFrame
+            
+            -- Results container
+            local resultsFrame = CreateInstance("ScrollingFrame", {
+                Size = UDim2.new(1, -40, 0, 0),
+                Position = UDim2.new(0, 20, 0, 45),
+                BackgroundColor3 = window.Theme.Secondary,
+                BorderSizePixel = 0,
+                Visible = true,
+                ClipsDescendants = true,
+                ScrollBarThickness = 3,
+                ScrollBarImageColor3 = window.Theme.Accent,
+                CanvasSize = UDim2.new(0, 0, 0, 0),
+                ScrollingDirection = Enum.ScrollingDirection.Y
+            })
+            resultsFrame.Parent = searchFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 8)
+            }, resultsFrame)
+            
+            local resultsLayout = CreateInstance("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDim.new(0, 2)
+            })
+            resultsLayout.Parent = resultsFrame
+            
+            -- Variables
+            local currentList = searchList
+            local selectedItem = nil
+            local isOpen = false
+            local refreshConnection = nil
+            local focusConnection = nil
+            local focusLostConnection = nil
+            
+            -- Auto-refresh indicator
+            local refreshIndicator = nil
+            if autoRefresh and getItems then
+                refreshIndicator = CreateInstance("Frame", {
+                    Size = UDim2.new(0, 6, 0, 6),
+                    Position = UDim2.new(1, -85, 0, 22),
+                    BackgroundColor3 = Color3.fromRGB(0, 255, 0),
+                    BorderSizePixel = 0
+                })
+                refreshIndicator.Parent = searchFrame
+                
+                CreateInstance("UICorner", {
+                    CornerRadius = UDim.new(1, 0)
+                }, refreshIndicator)
+                
+                -- Pulse animation for refresh indicator
+                spawn(function()
+                    while refreshIndicator and refreshIndicator.Parent do
+                        CreateTween(refreshIndicator, {BackgroundTransparency = 0.5}, 0.5)
+                        wait(0.5)
+                        if refreshIndicator and refreshIndicator.Parent then
+                            CreateTween(refreshIndicator, {BackgroundTransparency = 0}, 0.5)
+                        end
+                        wait(0.5)
+                    end
+                end)
+            end
+            
+            -- Update results function
+            local function updateResults(query)
+                -- Clear previous results
+                for _, child in pairs(resultsFrame:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child:Destroy()
+                    end
+                end
+                
+                local results = {}
+                local lowerQuery = query:lower()
+                
+                -- Filter or show all
+                if query == "" then
+                    -- Show all items when focused but no query
+                    results = currentList
+                else
+                    -- Filter items based on query
+                    for _, item in pairs(currentList) do
+                        local itemText = tostring(item):lower()
+                        if itemText:find(lowerQuery, 1, true) then
+                            table.insert(results, item)
+                        end
+                    end
+                    
+                    -- Sort results: exact matches first, then partial matches
+                    table.sort(results, function(a, b)
+                        local aLower = tostring(a):lower()
+                        local bLower = tostring(b):lower()
+                        local aStarts = aLower:sub(1, #lowerQuery) == lowerQuery
+                        local bStarts = bLower:sub(1, #lowerQuery) == lowerQuery
+                        
+                        if aStarts and not bStarts then
+                            return true
+                        elseif not aStarts and bStarts then
+                            return false
+                        else
+                            return aLower < bLower
+                        end
+                    end)
+                end
+                
+                -- Create result buttons
+                local maxResults = math.min(#results, 8) -- Max 8 visible results
+                for i = 1, maxResults do
+                    local item = results[i]
+                    local resultButton = CreateInstance("TextButton", {
+                        Size = UDim2.new(1, -4, 0, 28),
+                        BackgroundColor3 = window.Theme.Background,
+                        BackgroundTransparency = 0.9,
+                        Text = tostring(item),
+                        TextColor3 = window.Theme.TextDim,
+                        TextSize = 12,
+                        Font = Config.Font,
+                        BorderSizePixel = 0
+                    })
+                    resultButton.Parent = resultsFrame
+                    
+                    CreateInstance("UICorner", {
+                        CornerRadius = UDim.new(0, 6)
+                    }, resultButton)
+                    
+                    -- Highlight matching text
+                    if query ~= "" then
+                        local itemText = tostring(item)
+                        local startPos = itemText:lower():find(lowerQuery, 1, true)
+                        if startPos then
+                            -- Add highlight effect
+                            resultButton.TextColor3 = window.Theme.Text
+                        end
+                    end
+                    
+                    resultButton.MouseEnter:Connect(function()
+                        CreateTween(resultButton, {
+                            BackgroundTransparency = 0.7,
+                            TextColor3 = window.Theme.Text
+                        }, 0.1)
+                    end)
+                    
+                    resultButton.MouseLeave:Connect(function()
+                        CreateTween(resultButton, {
+                            BackgroundTransparency = 0.9,
+                            TextColor3 = window.Theme.TextDim
+                        }, 0.1)
+                    end)
+                    
+                    resultButton.MouseButton1Click:Connect(function()
+                        selectedItem = item
+                        searchBox.Text = tostring(item)
+                        isOpen = false
+                        searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                        CreateTween(dropdownArrow, {Rotation = 0}, 0.2)
+                        pcall(function()
+                            searchCallback(item)
+                        end)
+                    end)
+                end
+                
+                -- Update frame size
+                if isOpen then
+                    local resultCount = math.min(#results, 8)
+                    local newHeight = 50 + (resultCount * 30) + 10
+                    searchFrame.Size = UDim2.new(1, 0, 0, newHeight)
+                    resultsFrame.CanvasSize = UDim2.new(0, 0, 0, resultsLayout.AbsoluteContentSize.Y)
+                end
+                
+                -- Update item count
+                itemCount.Text = "(" .. #results .. ")"
+            end
+            
+            -- Refresh list function
+            local function refreshList()
+                if getItems then
+                    local newList = getItems()
+                    if newList then
+                        currentList = newList
+                        itemCount.Text = "(" .. #currentList .. ")"
+                        
+                        -- Update results if open
+                        if isOpen then
+                            updateResults(searchBox.Text)
+                        end
+                        
+                        -- Flash indicator
+                        if refreshIndicator then
+                            refreshIndicator.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                            CreateTween(refreshIndicator, {BackgroundColor3 = window.Theme.Accent}, 0.3)
+                        end
+                    end
+                end
+            end
+            
+            -- Auto-refresh setup
+            if autoRefresh and getItems then
+                refreshConnection = task.spawn(function()
+                    while searchFrame and searchFrame.Parent do
+                        task.wait(refreshInterval)
+                        if searchFrame and searchFrame.Parent then
+                            refreshList()
+                        end
+                    end
+                end)
+            end
+            
+            -- Search box text changed
+            searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+                if isOpen then
+                    updateResults(searchBox.Text)
+                end
+            end)
+            
+            -- Focus to open dropdown
+            focusConnection = searchBox.Focused:Connect(function()
+                isOpen = true
+                updateResults(searchBox.Text)
+                CreateTween(dropdownArrow, {Rotation = 180}, 0.2)
+            end)
+            
+            -- Click on arrow to toggle
+            local arrowButton = CreateInstance("TextButton", {
+                Size = UDim2.new(0, 30, 0, 30),
+                Position = UDim2.new(1, -45, 0, 10),
+                BackgroundTransparency = 1,
+                Text = "",
+                ZIndex = 2
+            })
+            arrowButton.Parent = searchFrame
+            
+            arrowButton.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                
+                if isOpen then
+                    updateResults(searchBox.Text)
+                    CreateTween(dropdownArrow, {Rotation = 180}, 0.2)
+                else
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                    CreateTween(dropdownArrow, {Rotation = 0}, 0.2)
+                end
+            end)
+            
+            -- Focus lost (with delay for button clicks)
+            focusLostConnection = searchBox.FocusLost:Connect(function(enterPressed)
+                if enterPressed and selectedItem then
+                    -- Enter pressed, keep selection
+                    return
+                end
+                
+                task.wait(0.2) -- Wait for button clicks
+                if not searchBox:IsFocused() then
+                    isOpen = false
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                    CreateTween(dropdownArrow, {Rotation = 0}, 0.2)
+                end
+            end)
+            
+            -- Initial list update
+            itemCount.Text = "(" .. #currentList .. ")"
+            
+            local element = {
+                Name = searchName,
+                UpdateList = function(newList)
+                    currentList = newList or {}
+                    itemCount.Text = "(" .. #currentList .. ")"
+                    if isOpen then
+                        updateResults(searchBox.Text)
+                    end
+                end,
+                GetSelected = function()
+                    return selectedItem
+                end,
+                SetSelected = function(item)
+                    selectedItem = item
+                    searchBox.Text = tostring(item)
+                    pcall(function()
+                        searchCallback(item)
+                    end)
+                end,
+                Clear = function()
+                    selectedItem = nil
+                    searchBox.Text = ""
+                    isOpen = false
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                    CreateTween(dropdownArrow, {Rotation = 0}, 0.2)
+                end,
+                Refresh = function()
+                    refreshList()
+                end,
+                SetAutoRefresh = function(enabled, interval)
+                    -- Stop old connection
+                    if refreshConnection then
+                        task.cancel(refreshConnection)
+                        refreshConnection = nil
+                    end
+                    
+                    -- Start new if enabled
+                    if enabled and getItems then
+                        refreshInterval = interval or refreshInterval
+                        refreshConnection = task.spawn(function()
+                            while searchFrame and searchFrame.Parent do
+                                task.wait(refreshInterval)
+                                if searchFrame and searchFrame.Parent then
+                                    refreshList()
+                                end
+                            end
+                        end)
+                        
+                        -- Update indicator
+                        if refreshIndicator then
+                            refreshIndicator.Visible = true
+                        end
+                    else
+                        -- Hide indicator
+                        if refreshIndicator then
+                            refreshIndicator.Visible = false
+                        end
+                    end
+                end,
+                Destroy = function()
+                    if refreshConnection then
+                        task.cancel(refreshConnection)
+                    end
+                    if focusConnection then
+                        focusConnection:Disconnect()
+                    end
+                    if focusLostConnection then
+                        focusLostConnection:Disconnect()
+                    end
+                    searchFrame:Destroy()
+                end
+            }
+            
+            table.insert(tab.Elements, element)
+            table.insert(window.Elements, element)
+            return element
+        end
             options = options or {}
             local searchName = options.Name or "Search"
             local searchList = options.List or {}
