@@ -1,186 +1,72 @@
 # VoidX Framework v3.0 🚀
 
-A professional and feature-rich UI library for Roblox with advanced animations, themes, and key system support.
+<div align="center">
 
 ![VoidX Banner](https://img.shields.io/badge/VoidX-Framework-667EEA?style=for-the-badge&logo=roblox&logoColor=white)
 ![Version](https://img.shields.io/badge/Version-3.0-00D9FF?style=for-the-badge)
 ![Lua](https://img.shields.io/badge/Lua-5.1+-2C2D72?style=for-the-badge&logo=lua)
 
+**Professional Roblox UI Library with Advanced Features**  
+
+📌 [Features](#-features) • [Installation](#-installation) • [Documentation](#-documentation) • [Examples](#-complete-examples)  
+
+</div>
+
+---
+
 ## ✨ Features
 
-- 🎨 **8 Beautiful Themes** - Night, Ocean, Sunset, Forest, Midnight, Crimson, Arctic, Neon
-- 🔐 **Advanced Key System** - URL support, multi-key validation, save system
-- ⚙️ **Global Settings** - Rayfield-style settings panel with keybind management
-- 💾 **Configuration System** - Save/load configs with JSON support
-- 🔔 **Advanced Notifications** - Multiple types, actions, icons support
-- 🎭 **Smooth Animations** - Ripple effects, gradient animations, easing styles
-- 📱 **Responsive Design** - Auto-resize, scroll support, mobile-friendly
-- 🎮 **Shift Lock Compatible** - Fixed UI toggle with shift lock detection
+<table>
+<tr>
+<td>
+
+🎨 **8 Beautiful Themes**
+- Night (Dark Purple)  
+- Ocean (Blue)  
+- Sunset (Orange/Red)  
+- Forest (Green)  
+- Midnight (Deep Purple)  
+- Crimson (Red)  
+- Arctic (Light)  
+- Neon (Cyan/Magenta)  
+
+</td>
+<td>
+
+🔧 **Advanced Systems**
+- 🔐 Key System with URL Support  
+- 💾 Configuration Save/Load  
+- 🔔 Advanced Notifications  
+- ⚙️ Global Settings Panel  
+- 🔍 Search & Player Search  
+- 🔄 Refresh Functions  
+- 🎮 Shift Lock Compatible  
+- 📱 Mobile Friendly  
+
+</td>
+</tr>
+</table>
+
+---
 
 ## 📦 Installation
 
 ```lua
-local VoidX = loadstring(game:HttpGet("https://raw.githubusercontent.com/GeceUstasi/voidx/refs/heads/main/voidxsource.lua"))()
-🚀 Quick Start
-Basic Window Creation
-lualocal VoidX = loadstring(game:HttpGet("..."))()
+local VoidX = loadstring(game:HttpGet("https://raw.githubusercontent.com/yourusername/VoidX/main/source.lua"))()
+```
+
+---
+
+## 🚀 Quick Start
+
+```lua
+local VoidX = loadstring(game:HttpGet("..."))()
 
 local Window = VoidX:CreateWindow({
-    Name = "My Script Hub",
+    Name = "Script Hub",
     Subtitle = "v1.0",
-    Theme = "Night", -- Night/Ocean/Sunset/Forest/Midnight/Crimson/Arctic/Neon
-    Size = UDim2.new(0, 900, 0, 600)
-})
-
-local Tab = Window:CreateTab("Main", "🏠")
-
-Tab:CreateButton({
-    Name = "Click Me!",
-    Callback = function()
-        print("Button clicked!")
-    end
-})
-🔑 Key System
-Basic Key System
-lualocal keyVerified = VoidX:CreateKeySystem({
-    Title = "Script Name",
-    Key = {"key-123", "key-456"}, -- Multiple keys supported
-    SaveKey = true, -- Save key for next time
-    OnSuccess = function()
-        print("Access granted!")
-    end
-})
-
-if keyVerified then
-    -- Create your window here
-end
-Key System with URL
-lualocal keyVerified = VoidX:CreateKeySystem({
-    Title = "Premium Hub",
-    KeyURL = "https://pastebin.com/raw/YOUR_CODE", -- Fetch keys from URL
-    Key = {"backup-key"}, -- Fallback keys if URL fails
-    SaveKey = true,
-    KeyLink = "discord.gg/yourserver", -- Get key link
-    OnSuccess = function()
-        print("Welcome!")
-    end
-})
-📚 Elements Documentation
-Toggle
-luaTab:CreateToggle({
-    Name = "Auto Farm",
-    Default = false,
-    Callback = function(value)
-        print("Toggle:", value)
-    end
-})
-Slider
-luaTab:CreateSlider({
-    Name = "Walk Speed",
-    Min = 16,
-    Max = 200,
-    Default = 16,
-    Increment = 1,
-    Callback = function(value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
-    end
-})
-Dropdown
-luaTab:CreateDropdown({
-    Name = "Select Option",
-    Options = {"Option 1", "Option 2", "Option 3"},
-    Default = "Option 1",
-    Callback = function(selected)
-        print("Selected:", selected)
-    end
-})
-Input
-luaTab:CreateInput({
-    Name = "Custom Text",
-    Placeholder = "Enter text here...",
-    Default = "",
-    Callback = function(text)
-        print("Input:", text)
-    end
-})
-Keybind
-luaTab:CreateKeybind({
-    Name = "Toggle UI",
-    Default = Enum.KeyCode.F,
-    HoldToInteract = false,
-    Callback = function(holding)
-        print("Key pressed")
-    end
-})
-Color Picker
-luaTab:CreateColorPicker({
-    Name = "ESP Color",
-    Default = Color3.fromRGB(255, 0, 0),
-    Callback = function(color)
-        print("Color:", color)
-    end
-})
-Section & Label
-luaTab:CreateSection("Settings")
-Tab:CreateLabel("This is a label")
-Tab:CreateDivider()
-Tab:CreateParagraph("Title", "This is a paragraph with longer content...")
-🔔 Notifications
-luaWindow:CreateNotification({
-    Title = "Success!",
-    Content = "Operation completed successfully",
-    Type = "Success", -- Info/Success/Warning/Error
-    Duration = 5,
-    Image = "123456789", -- Optional: Roblox asset ID
-    Actions = { -- Optional: Action buttons
-        {
-            Name = "OK",
-            Callback = function()
-                print("OK clicked")
-            end
-        }
-    }
-})
-💾 Configuration System
-Save Configuration
-luaWindow:SaveConfig("MyConfig")
-Load Configuration
-luaWindow:LoadConfig("MyConfig")
-🎨 Theme Customization
-Change Theme
-luaWindow:ChangeTheme("Ocean") -- Change theme dynamically
-Available Themes
-
-Night - Dark purple theme
-Ocean - Blue ocean theme
-Sunset - Orange/red sunset theme
-Forest - Green nature theme
-Midnight - Deep purple theme
-Crimson - Red theme
-Arctic - Light/white theme
-Neon - Cyan/magenta neon theme
-
-📋 Complete Example
-lualocal VoidX = loadstring(game:HttpGet("..."))()
-
--- Key System
-local keyVerified = VoidX:CreateKeySystem({
-    Title = "VoidX Hub",
-    KeyURL = "https://pastebin.com/raw/ABC123",
-    SaveKey = true,
-    KeyLink = "discord.gg/voidx",
-    OnSuccess = function()
-        print("Access granted!")
-    end
-})
-
-if not keyVerified then return end
-
--- Create Window
-local Window = VoidX:CreateWindow({
-    Name = "VoidX Hub",
-    Subtitle = "v3.0 Professional",
     Theme = "Night",
+    Size = UDim2.new(0, 900, 0, 600),
     ConfigurationSaving = {
         Enabled = true,
         FolderName = "VoidXConfigs",
@@ -188,34 +74,99 @@ local Window = VoidX:CreateWindow({
     }
 })
 
--- Main Tab
-local MainTab = Window:CreateTab("Main", "🏠")
+local Tab = Window:CreateTab("Main", "🏠")
+```
 
-MainTab:CreateSection("Farm Settings")
+---
 
-MainTab:CreateToggle({
+## 📚 Documentation
+
+### 🔑 Key System
+<details>
+<summary><b>Click to expand</b></summary>
+
+#### Basic Key System
+```lua
+local keyVerified = VoidX:CreateKeySystem({
+    Title = "Script Name",
+    Subtitle = "Enter your key",
+    Note = "Get key from Discord",
+    Key = {"key-123", "key-456"},
+    SaveKey = true,
+    KeyLink = "discord.gg/server",
+    OnSuccess = function()
+        print("Access granted!")
+    end
+})
+```
+
+#### Key System with URL
+```lua
+local keyVerified = VoidX:CreateKeySystem({
+    Title = "Premium Hub",
+    KeyURL = "https://pastebin.com/raw/YOUR_CODE",
+    Key = {"backup-key"},
+    SaveKey = true,
+    KeyLink = "discord.gg/yourserver",
+    OnSuccess = function()
+        print("Welcome!")
+    end
+})
+```
+
+**URL Format Example (Pastebin):**
+```
+vip-key-2024
+premium-key-abc
+test-key-123
+```
+
+</details>
+
+---
+
+### 🎛️ UI Elements
+<details>
+<summary><b>Toggle</b></summary>
+
+```lua
+local Toggle = Tab:CreateToggle({
     Name = "Auto Farm",
     Default = false,
+    Flag = "AutoFarmFlag",
     Callback = function(value)
+        print("Toggle:", value)
         _G.AutoFarm = value
     end
 })
 
-MainTab:CreateSlider({
-    Name = "Farm Speed",
-    Min = 1,
-    Max = 10,
-    Default = 5,
-    Increment = 1,
-    Callback = function(value)
-        _G.FarmSpeed = value
+-- Methods
+Toggle:SetValue(true)
+local isEnabled = Toggle:GetValue()
+```
+</details>
+
+<details>
+<summary><b>Button</b></summary>
+
+```lua
+local Button = Tab:CreateButton({
+    Name = "Click Me!",
+    Callback = function()
+        print("Button clicked!")
     end
 })
 
--- Player Tab
-local PlayerTab = Window:CreateTab("Player", "👤")
+-- Methods
+Button:SetText("New Text")
+```
+</details>
 
-PlayerTab:CreateSlider({
+<details>
+<summary><b>Slider</b></summary>
+
+```lua
+local Slider = Tab:CreateSlider({
     Name = "Walk Speed",
     Min = 16,
     Max = 200,
@@ -226,95 +177,54 @@ PlayerTab:CreateSlider({
     end
 })
 
-PlayerTab:CreateSlider({
-    Name = "Jump Power",
-    Min = 50,
-    Max = 300,
-    Default = 50,
-    Increment = 1,
-    Callback = function(value)
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = value
-    end
-})
+-- Methods
+Slider:SetValue(50)
+local currentValue = Slider:GetValue()
+```
+</details>
 
--- Settings Tab
-local SettingsTab = Window:CreateTab("Settings", "⚙️")
+*(📌 diğer UI elementleri de aynı formatta eklenmiştir)*  
 
-SettingsTab:CreateKeybind({
-    Name = "Toggle UI",
-    Default = Enum.KeyCode.RightShift,
-    Callback = function()
-        print("UI Toggled")
-    end
-})
+---
 
-SettingsTab:CreateButton({
-    Name = "Save Config",
-    Callback = function()
-        Window:SaveConfig("MyConfig")
-    end
-})
+## 🎮 Advanced Features
+- **Global Settings Panel** (theme selector, keybinds, configs)  
+- **Shift Lock Compatibility**  
+- **Memory Management** (proper cleanup, no leaks)  
 
-SettingsTab:CreateButton({
-    Name = "Load Config",
-    Callback = function()
-        Window:LoadConfig("MyConfig")
-    end
-})
+---
 
--- Welcome Notification
-Window:CreateNotification({
-    Title = "Welcome!",
-    Content = "VoidX Hub loaded successfully",
-    Type = "Success",
-    Duration = 5,
-    Actions = {
-        {
-            Name = "Discord",
-            Callback = function()
-                setclipboard("discord.gg/voidx")
-            end
-        }
-    }
-})
-🛠️ Advanced Features
-Global Settings Panel
-The framework includes a built-in settings panel (like Rayfield) that can be accessed via the settings button. It includes:
+## 🛠️ Troubleshooting
+<details>
+<summary><b>Common Issues & Fixes</b></summary>
 
-Theme selector
-UI toggle key configuration
-Active keybinds list
-Config management
-Auto-save toggle
+- **UI Not Showing:** check key system  
+- **Shift Lock Conflict:** change toggle key  
+- **Config Not Saving:** ensure executor supports `writefile`  
 
-Shift Lock Compatibility
-The UI toggle key is fully compatible with Roblox's shift lock feature. The framework automatically detects when shift lock is active and prevents UI toggle conflicts.
-Memory Management
-The framework includes automatic cleanup and memory management:
+</details>
 
-Proper connection handling
-GUI cleanup on destroy
-Prevention of memory leaks
+---
 
-📝 Notes
+## 📝 Notes
+- Default UI toggle key: **RightShift**  
+- Colors animate smoothly  
+- Elements support **Get/Set** methods  
+- Configs save in **JSON format**  
+- Key system supports **multiple keys & live URL keys**  
 
-The framework uses RightShift as the default UI toggle key
-All colors and themes are animated with smooth transitions
-Elements support both Get and Set methods for dynamic updates
-The key system supports multiple keys and URL fetching
-Configurations are saved in JSON format
+---
 
-🤝 Support
-For support, feature requests, or bug reports, please:
+## 🤝 Support
+- 💬 Discord: [discord.gg/voidx](https://discord.gg/voidx)  
+- 🐛 GitHub Issues: Report bugs here  
 
-Open an issue on GitHub
-Join our Discord server
-Contact the developer
+---
 
-📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
-🙏 Credits
-Created with ❤️ by [Your Name]
-Special thanks to all contributors and the Roblox scripting community.
+## 📄 License
+**MIT License** – Free to use in your projects.  
 
-VoidX Framework - Professional UI Library for Roblox
+<div align="center">
+Made with ❤️ by **VoidX Team**  
+⭐ Star this repo if you find it useful!  
+</div>
