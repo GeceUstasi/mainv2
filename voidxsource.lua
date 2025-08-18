@@ -2887,6 +2887,335 @@ function VoidX:CreateWindow(options)
             local searchList = options.List or {}
             local searchCallback = options.Callback or function() end
             local searchPlaceholder = options.Placeholder or "Click to select or type to search..."
+            local getItems = options.GetItems or nil
+            local autoRefresh = options.AutoRefresh or false
+            local refreshInterval = options.RefreshInterval or 5
+            
+            -- Get window reference from parent chain
+            local currentWindow = window
+            if not currentWindow then
+                warn("Window reference not found")
+                return nil
+            end
+            
+            local searchFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 50),
+                BackgroundColor3 = currentWindow.Theme.Background,
+                BackgroundTransparency = 0.7,
+                ClipsDescendants = true,
+                LayoutOrder = 107
+            })
+            searchFrame.Parent = tabContent
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 12)
+            }, searchFrame)
+            
+            -- Search input box
+            local searchBox = CreateInstance("TextBox", {
+                Size = UDim2.new(1, -80, 0, 30),
+                Position = UDim2.new(0, 20, 0, 10),
+                BackgroundColor3 = currentWindow.Theme.Secondary,
+                BorderSizePixel = 0,
+                Text = "",
+                PlaceholderText = searchPlaceholder,
+                PlaceholderColor3 = currentWindow.Theme.TextDim,
+                TextColor3 = currentWindow.Theme.Text,
+                TextSize = 13,
+                Font = Config.Font,
+                ClearTextOnFocus = false
+            })
+            searchBox.Parent = searchFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 8)
+            }, searchBox)
+            
+            -- Dropdown arrow
+            local dropdownArrow = CreateInstance("TextLabel", {
+                Size = UDim2.new(0, 20, 0, 20),
+                Position = UDim2.new(1, -35, 0, 15),
+                BackgroundTransparency = 1,
+                Text = "▼",
+                TextColor3 = currentWindow.Theme.TextDim,
+                TextSize = 12,
+                Font = Config.Font,
+                Rotation = 0
+            })
+            dropdownArrow.Parent = searchFrame
+            
+            -- Item count label
+            local itemCount = CreateInstance("TextLabel", {
+                Size = UDim2.new(0, 40, 0, 20),
+                Position = UDim2.new(1, -75, 0, 15),
+                BackgroundTransparency = 1,
+                Text = "(" .. #searchList .. ")",
+                TextColor3 = currentWindow.Theme.Accent,
+                TextSize = 11,
+                Font = Config.Font
+            })
+            itemCount.Parent = searchFrame
+            
+            -- Results container
+            local resultsFrame = CreateInstance("ScrollingFrame", {
+                Size = UDim2.new(1, -40, 0, 0),
+                Position = UDim2.new(0, 20, 0, 45),
+                BackgroundColor3 = currentWindow.Theme.Secondary,
+                BorderSizePixel = 0,
+                Visible = true,
+                ClipsDescendants = true,
+                ScrollBarThickness = 3,
+                ScrollBarImageColor3 = currentWindow.Theme.Accent,
+                CanvasSize = UDim2.new(0, 0, 0, 0),
+                ScrollingDirection = Enum.ScrollingDirection.Y
+            })
+            resultsFrame.Parent = searchFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 8)
+            }, resultsFrame)
+            
+            local resultsLayout = CreateInstance("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDim.new(0, 2)
+            })
+            resultsLayout.Parent = resultsFrame
+            
+            -- Variables
+            local currentList = searchList or {}
+            local selectedItem = nil
+            local isOpen = false
+            local refreshConnection = nil
+            
+            -- Auto-refresh indicator (only if auto-refresh enabled)
+            local refreshIndicator = nil
+            if autoRefresh and getItems then
+                refreshIndicator = CreateInstance("Frame", {
+                    Size = UDim2.new(0, 6, 0, 6),
+                    Position = UDim2.new(1, -85, 0, 22),
+                    BackgroundColor3 = Color3.fromRGB(0, 255, 0),
+                    BackgroundTransparency = 0,
+                    BorderSizePixel = 0
+                })
+                refreshIndicator.Parent = searchFrame
+                
+                CreateInstance("UICorner", {
+                    CornerRadius = UDim.new(1, 0)
+                }, refreshIndicator)
+            end
+            
+            -- Update results function
+            local function updateResults(query)
+                query = query or ""
+                
+                -- Clear previous results
+                for _, child in pairs(resultsFrame:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child:Destroy()
+                    end
+                end
+                
+                local results = {}
+                local lowerQuery = query:lower()
+                
+                -- Filter or show all
+                if query == "" then
+                    results = currentList
+                else
+                    for _, item in pairs(currentList) do
+                        local itemText = tostring(item):lower()
+                        if itemText:find(lowerQuery, 1, true) then
+                            table.insert(results, item)
+                        end
+                    end
+                end
+                
+                -- Create result buttons
+                local maxResults = math.min(#results, 8)
+                for i = 1, maxResults do
+                    local item = results[i]
+                    if item then
+                        local resultButton = CreateInstance("TextButton", {
+                            Size = UDim2.new(1, -4, 0, 28),
+                            BackgroundColor3 = currentWindow.Theme.Background,
+                            BackgroundTransparency = 0.9,
+                            Text = tostring(item),
+                            TextColor3 = currentWindow.Theme.TextDim,
+                            TextSize = 12,
+                            Font = Config.Font,
+                            BorderSizePixel = 0
+                        })
+                        resultButton.Parent = resultsFrame
+                        
+                        CreateInstance("UICorner", {
+                            CornerRadius = UDim.new(0, 6)
+                        }, resultButton)
+                        
+                        resultButton.MouseEnter:Connect(function()
+                            resultButton.BackgroundTransparency = 0.7
+                            resultButton.TextColor3 = currentWindow.Theme.Text
+                        end)
+                        
+                        resultButton.MouseLeave:Connect(function()
+                            resultButton.BackgroundTransparency = 0.9
+                            resultButton.TextColor3 = currentWindow.Theme.TextDim
+                        end)
+                        
+                        resultButton.MouseButton1Click:Connect(function()
+                            selectedItem = item
+                            searchBox.Text = tostring(item)
+                            isOpen = false
+                            searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                            dropdownArrow.Rotation = 0
+                            
+                            pcall(function()
+                                searchCallback(item)
+                            end)
+                        end)
+                    end
+                end
+                
+                -- Update frame size
+                if isOpen then
+                    local resultCount = math.min(#results, 8)
+                    local newHeight = 50 + (resultCount * 30) + 10
+                    searchFrame.Size = UDim2.new(1, 0, 0, newHeight)
+                    resultsFrame.CanvasSize = UDim2.new(0, 0, 0, resultsLayout.AbsoluteContentSize.Y)
+                end
+                
+                -- Update item count
+                itemCount.Text = "(" .. #results .. ")"
+            end
+            
+            -- Refresh list function
+            local function refreshList()
+                if getItems and type(getItems) == "function" then
+                    local success, result = pcall(getItems)
+                    if success and result then
+                        currentList = result
+                        itemCount.Text = "(" .. #currentList .. ")"
+                        
+                        if isOpen then
+                            updateResults(searchBox.Text)
+                        end
+                        
+                        -- Flash indicator
+                        if refreshIndicator then
+                            refreshIndicator.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                            wait(0.1)
+                            if refreshIndicator and refreshIndicator.Parent then
+                                refreshIndicator.BackgroundColor3 = currentWindow.Theme.Accent
+                            end
+                        end
+                    end
+                end
+            end
+            
+            -- Auto-refresh setup
+            if autoRefresh and getItems then
+                spawn(function()
+                    while searchFrame and searchFrame.Parent do
+                        wait(refreshInterval)
+                        if searchFrame and searchFrame.Parent then
+                            refreshList()
+                        end
+                    end
+                end)
+            end
+            
+            -- Search box events
+            searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+                if isOpen then
+                    updateResults(searchBox.Text)
+                end
+            end)
+            
+            searchBox.Focused:Connect(function()
+                isOpen = true
+                updateResults(searchBox.Text)
+                dropdownArrow.Rotation = 180
+            end)
+            
+            searchBox.FocusLost:Connect(function(enterPressed)
+                wait(0.2) -- Wait for button clicks
+                if not searchBox:IsFocused() then
+                    isOpen = false
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                    dropdownArrow.Rotation = 0
+                end
+            end)
+            
+            -- Arrow button
+            local arrowButton = CreateInstance("TextButton", {
+                Size = UDim2.new(0, 30, 0, 30),
+                Position = UDim2.new(1, -45, 0, 10),
+                BackgroundTransparency = 1,
+                Text = "",
+                ZIndex = 2
+            })
+            arrowButton.Parent = searchFrame
+            
+            arrowButton.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                
+                if isOpen then
+                    updateResults(searchBox.Text)
+                    dropdownArrow.Rotation = 180
+                else
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                    dropdownArrow.Rotation = 0
+                end
+            end)
+            
+            -- Element methods
+            local element = {
+                Name = searchName,
+                UpdateList = function(newList)
+                    currentList = newList or {}
+                    itemCount.Text = "(" .. #currentList .. ")"
+                    if isOpen then
+                        updateResults(searchBox.Text)
+                    end
+                end,
+                GetSelected = function()
+                    return selectedItem
+                end,
+                SetSelected = function(item)
+                    selectedItem = item
+                    searchBox.Text = tostring(item)
+                    pcall(searchCallback, item)
+                end,
+                Clear = function()
+                    selectedItem = nil
+                    searchBox.Text = ""
+                    isOpen = false
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                    dropdownArrow.Rotation = 0
+                end,
+                Refresh = function()
+                    refreshList()
+                end,
+                SetAutoRefresh = function(enabled, interval)
+                    -- This would need connection management
+                    refreshInterval = interval or refreshInterval
+                end,
+                Destroy = function()
+                    if searchFrame and searchFrame.Parent then
+                        searchFrame:Destroy()
+                    end
+                end
+            }
+            
+            table.insert(tab.Elements, element)
+            table.insert(window.Elements, element)
+            
+            return element
+        end
+            options = options or {}
+            local searchName = options.Name or "Search"
+            local searchList = options.List or {}
+            local searchCallback = options.Callback or function() end
+            local searchPlaceholder = options.Placeholder or "Click to select or type to search..."
             local getItems = options.GetItems or nil -- Function to get updated items
             local autoRefresh = options.AutoRefresh or false -- Enable auto-refresh
             local refreshInterval = options.RefreshInterval or 5 -- Refresh interval in seconds
