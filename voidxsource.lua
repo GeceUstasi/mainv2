@@ -306,7 +306,7 @@ function VoidX:CreateKeySystem(options)
     options = options or {}
     local keySystemTitle = options.Title or "VoidX Key System"
     local keySystemSubtitle = options.Subtitle or "Enter your key to access"
-    local keySystemNote = options.Note or "Get key from our Discord"
+    local keySystemNote = options.Note or "Get key from Link"
     local correctKey = options.Key or {"VoidX-Free-Key-2024"}
     local keyURL = options.KeyURL or nil  -- URL'den key çekme
     local saveKey = options.SaveKey ~= false
