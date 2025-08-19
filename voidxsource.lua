@@ -1,5 +1,5 @@
--- VoidX Framework v3.1 | Professional Roblox UI Library
--- Fixed Dropdown Refresh + Advanced Search System
+-- VoidX Framework v3.0 | Professional Roblox UI Library
+-- Advanced Features Edition with Rayfield-like capabilities
 
 local VoidX = {}
 VoidX.__index = VoidX
@@ -301,93 +301,14 @@ function ConfigManager:ListConfigs()
     return configs
 end
 
--- Advanced Item Scanner System
-local ItemScanner = {}
-
-function ItemScanner:ScanPath(path, stack)
-    local items = {}
-    local itemCounts = {}
-    
-    local success, target = pcall(function()
-        local parts = {}
-        for part in path:gmatch("[^%-]+") do
-            table.insert(parts, part)
-        end
-        
-        local current = game
-        for _, part in ipairs(parts) do
-            current = current:FindFirstChild(part)
-            if not current then
-                return nil
-            end
-        end
-        return current
-    end)
-    
-    if success and target then
-        for _, child in pairs(target:GetChildren()) do
-            local itemName = child.Name
-            
-            if stack then
-                -- Count duplicates
-                if itemCounts[itemName] then
-                    itemCounts[itemName] = itemCounts[itemName] + 1
-                else
-                    itemCounts[itemName] = 1
-                    table.insert(items, itemName)
-                end
-            else
-                -- Add each item separately
-                table.insert(items, itemName)
-            end
-        end
-        
-        -- Add count suffix for stacked items
-        if stack then
-            local stackedItems = {}
-            for _, itemName in ipairs(items) do
-                local count = itemCounts[itemName]
-                if count > 1 then
-                    table.insert(stackedItems, itemName .. " (" .. count .. "x)")
-                else
-                    table.insert(stackedItems, itemName)
-                end
-            end
-            return stackedItems
-        end
-    else
-        warn("Failed to scan path:", path)
-    end
-    
-    return items
-end
-
-function ItemScanner:ScanPlayers()
-    local players = {}
-    for _, player in pairs(Players:GetPlayers()) do
-        table.insert(players, player.Name)
-    end
-    return players
-end
-
-function ItemScanner:ScanCustom(customFunction)
-    if type(customFunction) == "function" then
-        local success, result = pcall(customFunction)
-        if success and type(result) == "table" then
-            return result
-        end
-    end
-    return {}
-end
-
--- Key System Function (kept same as original)
+-- Key System Function
 function VoidX:CreateKeySystem(options)
     options = options or {}
     local keySystemTitle = options.Title or "VoidX Key System"
     local keySystemSubtitle = options.Subtitle or "Enter your key to access"
     local keySystemNote = options.Note or "Get key from our Discord"
     local correctKey = options.Key or {"VoidX-Free-Key-2024"}
-    local keyURL = options.KeyURL or nil
+    local keyURL = options.KeyURL or nil  -- URL'den key çekme
     local saveKey = options.SaveKey ~= false
     local keyLink = options.KeyLink or nil
     local onSuccess = options.OnSuccess or function() end
@@ -403,14 +324,16 @@ function VoidX:CreateKeySystem(options)
         end)
         
         if success and response then
+            -- Her satırı ayrı bir key olarak al
             for line in response:gmatch("[^\r\n]+") do
-                local trimmedLine = line:match("^%s*(.-)%s*$")
+                local trimmedLine = line:match("^%s*(.-)%s*$") -- Trim whitespace
                 if trimmedLine and trimmedLine ~= "" then
                     table.insert(validKeys, trimmedLine)
                 end
             end
         else
             warn("Failed to fetch keys from URL:", keyURL)
+            -- Fallback to provided keys
             validKeys = type(correctKey) == "table" and correctKey or {correctKey}
         end
     else
@@ -427,13 +350,13 @@ function VoidX:CreateKeySystem(options)
             for _, key in pairs(Config.KeySystem.Key) do
                 if savedKey == key then
                     onSuccess()
-                    return true
+                    return true -- Key doğru, UI yüklenebilir
                 end
             end
         end
     end
     
-    -- Create Key GUI (same as original)
+    -- Create Key GUI
     local keyGui = CreateInstance("ScreenGui", {
         Name = "VoidX_KeySystem",
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
@@ -674,16 +597,19 @@ function VoidX:CreateKeySystem(options)
         wait(0.1)
     end
     
-    return true
+    return true -- Key doğrulandı
 end
 
--- Main Window Constructor (shortened for space - including only new elements)
+-- Main Window Constructor
 function VoidX:CreateWindow(options)
     options = options or {}
     local windowName = options.Name or "VoidX Framework"
-    local windowSubtitle = options.Subtitle or "v3.1 Professional"
+    local windowSubtitle = options.Subtitle or "v3.0 Professional"
     local windowTheme = options.Theme or "Night"
     local windowSize = options.Size or UDim2.new(0, 900, 0, 600)
+    local configEnabled = options.ConfigurationSaving and options.ConfigurationSaving.Enabled or false
+    local configFolder = options.ConfigurationSaving and options.ConfigurationSaving.FolderName or "VoidXConfigs"
+    local configFile = options.ConfigurationSaving and options.ConfigurationSaving.FileName or "Settings"
     
     local window = {}
     window.Theme = Config.Themes[windowTheme]
@@ -692,16 +618,17 @@ function VoidX:CreateWindow(options)
     window.SettingsTab = nil
     window.Elements = {}
     
-    -- Create ScreenGui and main interface (same as before)
+    -- Create ScreenGui
     local screenGui = CreateInstance("ScreenGui", {
         Name = "VoidX_MainGUI",
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
         ResetOnSpawn = false,
         IgnoreGuiInset = true
     })
+    
     screenGui.Parent = GuiParent
     
-    -- Loading Screen (same as before)
+    -- Loading Screen
     local loadingFrame = CreateInstance("Frame", {
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundColor3 = Color3.fromRGB(20, 20, 30),
@@ -736,7 +663,7 @@ function VoidX:CreateWindow(options)
     wait(0.5)
     loadingFrame:Destroy()
     
-    -- Main Frame (same setup as before)
+    -- Main Frame
     local mainFrame = CreateInstance("Frame", {
         Name = "MainFrame",
         Size = windowSize,
@@ -748,12 +675,14 @@ function VoidX:CreateWindow(options)
     })
     mainFrame.Parent = screenGui
     
+    -- Animate main frame entrance
     CreateTween(mainFrame, {Position = UDim2.new(0.5, -windowSize.X.Offset/2, 0.5, -windowSize.Y.Offset/2)}, 0.5, Enum.EasingStyle.Back)
     
     CreateInstance("UICorner", {
         CornerRadius = UDim.new(0, 20)
     }, mainFrame)
     
+    -- Shadow effect
     CreateInstance("UIStroke", {
         Color = Color3.fromRGB(0, 0, 0),
         Thickness = 3,
@@ -826,7 +755,7 @@ function VoidX:CreateWindow(options)
         Padding = UDim.new(0, 5)
     }, tabContainer)
     
-    -- Settings Button
+    -- Settings Button (Global Settings like Rayfield)
     local settingsButton = CreateInstance("Frame", {
         Size = UDim2.new(1, -30, 0, 40),
         Position = UDim2.new(0, 15, 1, -60),
@@ -885,7 +814,561 @@ function VoidX:CreateWindow(options)
         CornerRadius = UDim.new(0, 15)
     }, contentArea)
     
+    -- Make window draggable
     MakeDraggable(mainFrame, logoSection)
+    
+    -- Create Settings Tab (Global Settings)
+    local function CreateSettingsTab()
+        local settingsTab = {}
+        settingsTab.Name = "Settings"
+        settingsTab.Elements = {}
+        settingsTab.IsSettings = true
+        
+        -- Settings Content Frame
+        local settingsContent = CreateInstance("ScrollingFrame", {
+            Name = "SettingsContent",
+            Size = UDim2.new(1, -20, 1, -20),
+            Position = UDim2.new(0, 10, 0, 10),
+            BackgroundTransparency = 1,
+            Visible = false,
+            ScrollBarThickness = 4,
+            ScrollBarImageColor3 = window.Theme.Accent,
+            BorderSizePixel = 0,
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            ScrollingDirection = Enum.ScrollingDirection.Y
+        })
+        settingsContent.Parent = contentArea
+        
+        local settingsLayout = CreateInstance("UIListLayout", {
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 15)
+        })
+        settingsLayout.Parent = settingsContent
+        
+        -- Settings Header
+        local settingsHeader = CreateInstance("Frame", {
+            Size = UDim2.new(1, 0, 0, 80),
+            BackgroundTransparency = 1,
+            LayoutOrder = 0
+        })
+        settingsHeader.Parent = settingsContent
+        
+        local settingsTitle = CreateInstance("TextLabel", {
+            Size = UDim2.new(1, 0, 0, 35),
+            BackgroundTransparency = 1,
+            Text = "Global Settings",
+            TextColor3 = window.Theme.Text,
+            TextSize = 32,
+            Font = Config.FontBold,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        settingsTitle.Parent = settingsHeader
+        
+        local settingsDescription = CreateInstance("TextLabel", {
+            Size = UDim2.new(1, 0, 0, 20),
+            Position = UDim2.new(0, 0, 0, 40),
+            BackgroundTransparency = 1,
+            Text = "Configure your UI experience",
+            TextColor3 = window.Theme.TextDim,
+            TextSize = 14,
+            Font = Config.Font,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        settingsDescription.Parent = settingsHeader
+        
+        -- Theme Section
+        local themeSection = CreateInstance("Frame", {
+            Size = UDim2.new(1, 0, 0, 35),
+            BackgroundTransparency = 1,
+            LayoutOrder = 1
+        })
+        themeSection.Parent = settingsContent
+        
+        local themeSectionLabel = CreateInstance("TextLabel", {
+            Size = UDim2.new(0.5, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = "APPEARANCE",
+            TextColor3 = window.Theme.Accent,
+            TextSize = 12,
+            Font = Config.FontBold,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        themeSectionLabel.Parent = themeSection
+        
+        local themeSectionLine = CreateInstance("Frame", {
+            Size = UDim2.new(0.5, -10, 0, 1),
+            Position = UDim2.new(0.5, 10, 0.5, 0),
+            BackgroundColor3 = window.Theme.Border,
+            BorderSizePixel = 0
+        })
+        themeSectionLine.Parent = themeSection
+        
+        -- Theme Dropdown
+        local themeDropdown = CreateInstance("Frame", {
+            Size = UDim2.new(1, 0, 0, 50),
+            BackgroundColor3 = window.Theme.Background,
+            BackgroundTransparency = 0.7,
+            ClipsDescendants = true,
+            LayoutOrder = 2
+        })
+        themeDropdown.Parent = settingsContent
+        
+        CreateInstance("UICorner", {
+            CornerRadius = UDim.new(0, 12)
+        }, themeDropdown)
+        
+        local themeButton = CreateInstance("TextButton", {
+            Size = UDim2.new(1, 0, 0, 50),
+            BackgroundTransparency = 1,
+            Text = "",
+            TextTransparency = 1
+        })
+        themeButton.Parent = themeDropdown
+        
+        local themeLabel = CreateInstance("TextLabel", {
+            Size = UDim2.new(1, -60, 1, 0),
+            Position = UDim2.new(0, 20, 0, 0),
+            BackgroundTransparency = 1,
+            Text = windowTheme,
+            TextColor3 = window.Theme.Text,
+            TextSize = 14,
+            Font = Config.Font,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        themeLabel.Parent = themeButton
+        
+        local themeArrow = CreateInstance("TextLabel", {
+            Size = UDim2.new(0, 20, 0, 20),
+            Position = UDim2.new(1, -40, 0, 15),
+            BackgroundTransparency = 1,
+            Text = "▼",
+            TextColor3 = window.Theme.TextDim,
+            TextSize = 12,
+            Font = Config.Font
+        })
+        themeArrow.Parent = themeButton
+        
+        local themeListFrame = CreateInstance("Frame", {
+            Size = UDim2.new(1, 0, 0, 0),
+            Position = UDim2.new(0, 0, 0, 50),
+            BackgroundColor3 = window.Theme.Secondary,
+            BorderSizePixel = 0,
+            Visible = true
+        })
+        themeListFrame.Parent = themeDropdown
+        
+        local themeListLayout = CreateInstance("UIListLayout", {
+            SortOrder = Enum.SortOrder.LayoutOrder
+        })
+        themeListLayout.Parent = themeListFrame
+        
+        local themeOpen = false
+        
+        -- Create theme options
+        for themeName, _ in pairs(Config.Themes) do
+            local themeOption = CreateInstance("TextButton", {
+                Size = UDim2.new(1, 0, 0, 35),
+                BackgroundColor3 = window.Theme.Background,
+                BackgroundTransparency = 0.9,
+                Text = themeName,
+                TextColor3 = window.Theme.TextDim,
+                TextSize = 13,
+                Font = Config.Font
+            })
+            themeOption.Parent = themeListFrame
+            
+            themeOption.MouseEnter:Connect(function()
+                CreateTween(themeOption, {
+                    BackgroundTransparency = 0.7,
+                    TextColor3 = window.Theme.Text
+                })
+            end)
+            
+            themeOption.MouseLeave:Connect(function()
+                CreateTween(themeOption, {
+                    BackgroundTransparency = 0.9,
+                    TextColor3 = window.Theme.TextDim
+                })
+            end)
+            
+            themeOption.MouseButton1Click:Connect(function()
+                themeLabel.Text = themeName
+                window:ChangeTheme(themeName)
+                GlobalSettings.Theme = themeName
+                
+                themeOpen = false
+                CreateTween(themeDropdown, {Size = UDim2.new(1, 0, 0, 50)})
+                CreateTween(themeArrow, {Rotation = 0})
+            end)
+        end
+        
+        themeButton.MouseButton1Click:Connect(function()
+            themeOpen = not themeOpen
+            
+            if themeOpen then
+                local contentHeight = themeListLayout.AbsoluteContentSize.Y
+                CreateTween(themeDropdown, {
+                    Size = UDim2.new(1, 0, 0, 50 + contentHeight)
+                })
+                CreateTween(themeArrow, {Rotation = 180})
+            else
+                CreateTween(themeDropdown, {Size = UDim2.new(1, 0, 0, 50)})
+                CreateTween(themeArrow, {Rotation = 0})
+            end
+        end)
+        
+        -- UI Toggle Key
+        local toggleKeySection = CreateInstance("Frame", {
+            Size = UDim2.new(1, 0, 0, 35),
+            BackgroundTransparency = 1,
+            LayoutOrder = 3
+        })
+        toggleKeySection.Parent = settingsContent
+        
+        local toggleKeySectionLabel = CreateInstance("TextLabel", {
+            Size = UDim2.new(0.5, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = "KEYBINDS",
+            TextColor3 = window.Theme.Accent,
+            TextSize = 12,
+            Font = Config.FontBold,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        toggleKeySectionLabel.Parent = toggleKeySection
+        
+        local toggleKeySectionLine = CreateInstance("Frame", {
+            Size = UDim2.new(0.5, -10, 0, 1),
+            Position = UDim2.new(0.5, 10, 0.5, 0),
+            BackgroundColor3 = window.Theme.Border,
+            BorderSizePixel = 0
+        })
+        toggleKeySectionLine.Parent = toggleKeySection
+        
+        -- UI Toggle Keybind
+        local toggleKeyFrame = CreateInstance("Frame", {
+            Size = UDim2.new(1, 0, 0, 50),
+            BackgroundColor3 = window.Theme.Background,
+            BackgroundTransparency = 0.7,
+            LayoutOrder = 4
+        })
+        toggleKeyFrame.Parent = settingsContent
+        
+        CreateInstance("UICorner", {
+            CornerRadius = UDim.new(0, 12)
+        }, toggleKeyFrame)
+        
+        local toggleKeyLabel = CreateInstance("TextLabel", {
+            Size = UDim2.new(1, -100, 1, 0),
+            Position = UDim2.new(0, 20, 0, 0),
+            BackgroundTransparency = 1,
+            Text = "UI Toggle Key",
+            TextColor3 = window.Theme.Text,
+            TextSize = 14,
+            Font = Config.Font,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        toggleKeyLabel.Parent = toggleKeyFrame
+        
+        local toggleKeyButton = CreateInstance("TextButton", {
+            Size = UDim2.new(0, 70, 0, 30),
+            Position = UDim2.new(1, -85, 0.5, -15),
+            BackgroundColor3 = window.Theme.Secondary,
+            BorderSizePixel = 0,
+            Text = GlobalSettings.ToggleKey.Name,
+            TextColor3 = window.Theme.Text,
+            TextSize = 13,
+            Font = Config.Font
+        })
+        toggleKeyButton.Parent = toggleKeyFrame
+        
+        CreateInstance("UICorner", {
+            CornerRadius = UDim.new(0, 8)
+        }, toggleKeyButton)
+        
+        local listeningForKey = false
+        
+        toggleKeyButton.MouseButton1Click:Connect(function()
+            listeningForKey = true
+            toggleKeyButton.Text = "..."
+            CreateTween(toggleKeyButton, {BackgroundColor3 = window.Theme.Accent}, 0.2)
+        end)
+        
+        -- Keybind List
+        local keybindListSection = CreateInstance("Frame", {
+            Size = UDim2.new(1, 0, 0, 35),
+            BackgroundTransparency = 1,
+            LayoutOrder = 5
+        })
+        keybindListSection.Parent = settingsContent
+        
+        local keybindListLabel = CreateInstance("TextLabel", {
+            Size = UDim2.new(0.5, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = "ACTIVE KEYBINDS",
+            TextColor3 = window.Theme.Accent,
+            TextSize = 12,
+            Font = Config.FontBold,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        keybindListLabel.Parent = keybindListSection
+        
+        local keybindListLine = CreateInstance("Frame", {
+            Size = UDim2.new(0.5, -10, 0, 1),
+            Position = UDim2.new(0.5, 10, 0.5, 0),
+            BackgroundColor3 = window.Theme.Border,
+            BorderSizePixel = 0
+        })
+        keybindListLine.Parent = keybindListSection
+        
+        -- Keybind List Container
+        local keybindListContainer = CreateInstance("Frame", {
+            Size = UDim2.new(1, 0, 0, 200),
+            BackgroundColor3 = window.Theme.Background,
+            BackgroundTransparency = 0.7,
+            LayoutOrder = 6
+        })
+        keybindListContainer.Parent = settingsContent
+        
+        CreateInstance("UICorner", {
+            CornerRadius = UDim.new(0, 12)
+        }, keybindListContainer)
+        
+        local keybindListScroll = CreateInstance("ScrollingFrame", {
+            Size = UDim2.new(1, -10, 1, -10),
+            Position = UDim2.new(0, 5, 0, 5),
+            BackgroundTransparency = 1,
+            ScrollBarThickness = 3,
+            ScrollBarImageColor3 = window.Theme.Accent,
+            BorderSizePixel = 0,
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            ScrollingDirection = Enum.ScrollingDirection.Y
+        })
+        keybindListScroll.Parent = keybindListContainer
+        
+        local keybindListScrollLayout = CreateInstance("UIListLayout", {
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 5)
+        })
+        keybindListScrollLayout.Parent = keybindListScroll
+        
+        -- Function to update keybind list
+        local function UpdateKeybindList()
+            for _, child in pairs(keybindListScroll:GetChildren()) do
+                if child:IsA("Frame") then
+                    child:Destroy()
+                end
+            end
+            
+            for name, key in pairs(GlobalSettings.KeybindList) do
+                local keybindItem = CreateInstance("Frame", {
+                    Size = UDim2.new(1, 0, 0, 30),
+                    BackgroundTransparency = 1
+                })
+                keybindItem.Parent = keybindListScroll
+                
+                local keybindName = CreateInstance("TextLabel", {
+                    Size = UDim2.new(0.7, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    Text = name,
+                    TextColor3 = window.Theme.TextDim,
+                    TextSize = 12,
+                    Font = Config.Font,
+                    TextXAlignment = Enum.TextXAlignment.Left
+                })
+                keybindName.Parent = keybindItem
+                
+                local keybindKey = CreateInstance("TextLabel", {
+                    Size = UDim2.new(0.3, 0, 1, 0),
+                    Position = UDim2.new(0.7, 0, 0, 0),
+                    BackgroundTransparency = 1,
+                    Text = key.Name,
+                    TextColor3 = window.Theme.Accent,
+                    TextSize = 12,
+                    Font = Config.Font,
+                    TextXAlignment = Enum.TextXAlignment.Right
+                })
+                keybindKey.Parent = keybindItem
+            end
+            
+            keybindListScrollLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                keybindListScroll.CanvasSize = UDim2.new(0, 0, 0, keybindListScrollLayout.AbsoluteContentSize.Y)
+            end)
+        end
+        
+        settingsTab.UpdateKeybinds = UpdateKeybindList
+        UpdateKeybindList()
+        
+        -- Config Section
+        local configSection = CreateInstance("Frame", {
+            Size = UDim2.new(1, 0, 0, 35),
+            BackgroundTransparency = 1,
+            LayoutOrder = 7
+        })
+        configSection.Parent = settingsContent
+        
+        local configSectionLabel = CreateInstance("TextLabel", {
+            Size = UDim2.new(0.5, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = "CONFIGURATION",
+            TextColor3 = window.Theme.Accent,
+            TextSize = 12,
+            Font = Config.FontBold,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        configSectionLabel.Parent = configSection
+        
+        local configSectionLine = CreateInstance("Frame", {
+            Size = UDim2.new(0.5, -10, 0, 1),
+            Position = UDim2.new(0.5, 10, 0.5, 0),
+            BackgroundColor3 = window.Theme.Border,
+            BorderSizePixel = 0
+        })
+        configSectionLine.Parent = configSection
+        
+        -- Config Management
+        local configFrame = CreateInstance("Frame", {
+            Size = UDim2.new(1, 0, 0, 120),
+            BackgroundColor3 = window.Theme.Background,
+            BackgroundTransparency = 0.7,
+            LayoutOrder = 8
+        })
+        configFrame.Parent = settingsContent
+        
+        CreateInstance("UICorner", {
+            CornerRadius = UDim.new(0, 12)
+        }, configFrame)
+        
+        -- Save Config Button
+        local saveConfigButton = CreateInstance("TextButton", {
+            Size = UDim2.new(0.45, 0, 0, 35),
+            Position = UDim2.new(0.025, 0, 0.15, 0),
+            BackgroundColor3 = window.Theme.Accent,
+            BorderSizePixel = 0,
+            Text = "Save Config",
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextSize = 13,
+            Font = Config.FontBold
+        })
+        saveConfigButton.Parent = configFrame
+        
+        CreateInstance("UICorner", {
+            CornerRadius = UDim.new(0, 8)
+        }, saveConfigButton)
+        
+        -- Load Config Button
+        local loadConfigButton = CreateInstance("TextButton", {
+            Size = UDim2.new(0.45, 0, 0, 35),
+            Position = UDim2.new(0.525, 0, 0.15, 0),
+            BackgroundColor3 = window.Theme.AccentDark,
+            BorderSizePixel = 0,
+            Text = "Load Config",
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextSize = 13,
+            Font = Config.FontBold
+        })
+        loadConfigButton.Parent = configFrame
+        
+        CreateInstance("UICorner", {
+            CornerRadius = UDim.new(0, 8)
+        }, loadConfigButton)
+        
+        -- Auto Save Toggle
+        local autoSaveFrame = CreateInstance("Frame", {
+            Size = UDim2.new(0.95, 0, 0, 30),
+            Position = UDim2.new(0.025, 0, 0.6, 0),
+            BackgroundTransparency = 1
+        })
+        autoSaveFrame.Parent = configFrame
+        
+        local autoSaveLabel = CreateInstance("TextLabel", {
+            Size = UDim2.new(0.7, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = "Auto Save",
+            TextColor3 = window.Theme.Text,
+            TextSize = 13,
+            Font = Config.Font,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        autoSaveLabel.Parent = autoSaveFrame
+        
+        local autoSaveSwitch = CreateInstance("Frame", {
+            Size = UDim2.new(0, 40, 0, 20),
+            Position = UDim2.new(1, -45, 0.5, -10),
+            BackgroundColor3 = window.Theme.Border
+        })
+        autoSaveSwitch.Parent = autoSaveFrame
+        
+        CreateInstance("UICorner", {
+            CornerRadius = UDim.new(1, 0)
+        }, autoSaveSwitch)
+        
+        local autoSaveCircle = CreateInstance("Frame", {
+            Size = UDim2.new(0, 16, 0, 16),
+            Position = UDim2.new(0, 2, 0, 2),
+            BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        })
+        autoSaveCircle.Parent = autoSaveSwitch
+        
+        CreateInstance("UICorner", {
+            CornerRadius = UDim.new(1, 0)
+        }, autoSaveCircle)
+        
+        local autoSaveButton = CreateInstance("TextButton", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = "",
+            TextTransparency = 1
+        })
+        autoSaveButton.Parent = autoSaveFrame
+        
+        local autoSaveEnabled = Config.ConfigSystem.AutoSave
+        
+        local function updateAutoSave()
+            if autoSaveEnabled then
+                CreateTween(autoSaveSwitch, {BackgroundColor3 = window.Theme.Toggle}, 0.3)
+                CreateTween(autoSaveCircle, {Position = UDim2.new(0, 22, 0, 2)}, 0.3)
+            else
+                CreateTween(autoSaveSwitch, {BackgroundColor3 = window.Theme.Border}, 0.3)
+                CreateTween(autoSaveCircle, {Position = UDim2.new(0, 2, 0, 2)}, 0.3)
+            end
+            Config.ConfigSystem.AutoSave = autoSaveEnabled
+        end
+        
+        autoSaveButton.MouseButton1Click:Connect(function()
+            autoSaveEnabled = not autoSaveEnabled
+            updateAutoSave()
+        end)
+        
+        updateAutoSave()
+        
+        -- Auto-resize settings content
+        settingsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            settingsContent.CanvasSize = UDim2.new(0, 0, 0, settingsLayout.AbsoluteContentSize.Y + 20)
+        end)
+        
+        -- Listen for UI Toggle Key changes
+        UserInputService.InputBegan:Connect(function(input, gameProcessed)
+            if listeningForKey and not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard then
+                GlobalSettings.ToggleKey = input.KeyCode
+                toggleKeyButton.Text = input.KeyCode.Name
+                listeningForKey = false
+                CreateTween(toggleKeyButton, {BackgroundColor3 = window.Theme.Secondary}, 0.2)
+            end
+        end)
+        
+        settingsTab.Content = settingsContent
+        window.SettingsTab = settingsTab
+        
+        return settingsTab
+    end
+    
+    -- Create the settings tab
+    local settingsTab = CreateSettingsTab()
+    
+    -- Settings button click handler
+    settingsButtonClick.MouseButton1Click:Connect(function()
+        window:SelectTab(settingsTab)
+    end)
     
     -- Tab Creation Method
     function window:CreateTab(tabName, tabIcon)
@@ -997,10 +1480,12 @@ function VoidX:CreateWindow(options)
             tabContent.CanvasSize = UDim2.new(0, 0, 0, contentLayout.AbsoluteContentSize.Y + 20)
         end)
         
+        -- Tab Selection
         tabButtonClick.MouseButton1Click:Connect(function()
             window:SelectTab(tab)
         end)
         
+        -- Hover Effect with animation
         tabButton.MouseEnter:Connect(function()
             if window.ActiveTab ~= tab then
                 CreateTween(tabButton, {BackgroundTransparency = 0.8}, 0.2)
@@ -1015,830 +1500,115 @@ function VoidX:CreateWindow(options)
             end
         end)
         
-        -- FIXED DROPDOWN ELEMENT
-        function tab:CreateDropdown(options)
+        -- ALL Element Creation Methods
+        
+        -- Keybind Element
+        function tab:CreateKeybind(options)
             options = options or {}
-            local dropdownName = options.Name or "Dropdown"
-            local dropdownList = options.Options or {}
-            local dropdownDefault = options.Default or (dropdownList[1] or "")
-            local dropdownCallback = options.Callback or function() end
-            local dropdownRefresh = options.Refresh or nil
+            local keybindName = options.Name or "Keybind"
+            local keybindDefault = options.Default or Enum.KeyCode.F
+            local keybindCallback = options.Callback or function() end
+            local keybindHold = options.HoldToInteract or false
             
-            local dropdownFrame = CreateInstance("Frame", {
+            local keybindFrame = CreateInstance("Frame", {
                 Size = UDim2.new(1, 0, 0, 50),
                 BackgroundColor3 = window.Theme.Background,
                 BackgroundTransparency = 0.7,
-                ClipsDescendants = true,
-                LayoutOrder = 107
+                LayoutOrder = 90
             })
-            dropdownFrame.Parent = tabContent
+            keybindFrame.Parent = tabContent
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(0, 12)
-            }, dropdownFrame)
+            }, keybindFrame)
             
-            local dropdownButton = CreateInstance("TextButton", {
-                Size = UDim2.new(1, 0, 0, 50),
-                BackgroundTransparency = 1,
-                Text = "",
-                TextTransparency = 1
-            })
-            dropdownButton.Parent = dropdownFrame
-            
-            local dropdownLabel = CreateInstance("TextLabel", {
-                Size = UDim2.new(1, -90, 1, 0),
+            local keybindLabel = CreateInstance("TextLabel", {
+                Size = UDim2.new(1, -100, 1, 0),
                 Position = UDim2.new(0, 20, 0, 0),
                 BackgroundTransparency = 1,
-                Text = dropdownDefault or dropdownName,
+                Text = keybindName,
                 TextColor3 = window.Theme.Text,
                 TextSize = 14,
                 Font = Config.Font,
                 TextXAlignment = Enum.TextXAlignment.Left
             })
-            dropdownLabel.Parent = dropdownButton
+            keybindLabel.Parent = keybindFrame
             
-            -- Refresh button
-            local refreshButton = nil
-            if dropdownRefresh then
-                refreshButton = CreateInstance("TextButton", {
-                    Size = UDim2.new(0, 30, 0, 30),
-                    Position = UDim2.new(1, -70, 0.5, -15),
-                    BackgroundColor3 = window.Theme.Secondary,
-                    BorderSizePixel = 0,
-                    Text = "↻",
-                    TextColor3 = window.Theme.TextDim,
-                    TextSize = 18,
-                    Font = Config.Font,
-                    Rotation = 0
-                })
-                refreshButton.Parent = dropdownFrame
-                
-                CreateInstance("UICorner", {
-                    CornerRadius = UDim.new(0, 6)
-                }, refreshButton)
-            end
-            
-            local dropdownArrow = CreateInstance("TextLabel", {
-                Size = UDim2.new(0, 20, 0, 20),
-                Position = UDim2.new(1, -40, 0, 15),
-                BackgroundTransparency = 1,
-                Text = "▼",
-                TextColor3 = window.Theme.TextDim,
-                TextSize = 12,
-                Font = Config.Font
-            })
-            dropdownArrow.Parent = dropdownButton
-            
-            local dropdownListFrame = CreateInstance("Frame", {
-                Size = UDim2.new(1, 0, 0, 0),
-                Position = UDim2.new(0, 0, 0, 50),
+            local keybindButton = CreateInstance("TextButton", {
+                Size = UDim2.new(0, 70, 0, 30),
+                Position = UDim2.new(1, -85, 0.5, -15),
                 BackgroundColor3 = window.Theme.Secondary,
                 BorderSizePixel = 0,
-                Visible = true
-            })
-            dropdownListFrame.Parent = dropdownFrame
-            
-            local dropdownListLayout = CreateInstance("UIListLayout", {
-                SortOrder = Enum.SortOrder.LayoutOrder
-            })
-            dropdownListLayout.Parent = dropdownListFrame
-            
-            local isOpen = false
-            local currentOption = dropdownDefault
-            local optionButtons = {}
-            
-            -- Function to create/update options
-            local function updateOptions()
-                -- Clear old options
-                for _, button in pairs(optionButtons) do
-                    button:Destroy()
-                end
-                optionButtons = {}
-                
-                -- Create new options
-                for i, option in ipairs(dropdownList) do
-                    local optionButton = CreateInstance("TextButton", {
-                        Size = UDim2.new(1, 0, 0, 35),
-                        BackgroundColor3 = window.Theme.Background,
-                        BackgroundTransparency = 0.9,
-                        Text = tostring(option),
-                        TextColor3 = window.Theme.TextDim,
-                        TextSize = 13,
-                        Font = Config.Font,
-                        LayoutOrder = i
-                    })
-                    optionButton.Parent = dropdownListFrame
-                    table.insert(optionButtons, optionButton)
-                    
-                    optionButton.MouseEnter:Connect(function()
-                        CreateTween(optionButton, {
-                            BackgroundTransparency = 0.7,
-                            TextColor3 = window.Theme.Text
-                        }, 0.1)
-                    end)
-                    
-                    optionButton.MouseLeave:Connect(function()
-                        CreateTween(optionButton, {
-                            BackgroundTransparency = 0.9,
-                            TextColor3 = window.Theme.TextDim
-                        }, 0.1)
-                    end)
-                    
-                    optionButton.MouseButton1Click:Connect(function()
-                        currentOption = option
-                        dropdownLabel.Text = tostring(option)
-                        isOpen = false
-                        CreateTween(dropdownFrame, {Size = UDim2.new(1, 0, 0, 50)}, 0.3)
-                        CreateTween(dropdownArrow, {Rotation = 0}, 0.3)
-                        
-                        pcall(function()
-                            dropdownCallback(option)
-                        end)
-                    end)
-                end
-                
-                -- Update layout
-                wait()
-                local contentHeight = dropdownListLayout.AbsoluteContentSize.Y
-                if isOpen then
-                    dropdownFrame.Size = UDim2.new(1, 0, 0, 50 + contentHeight)
-                end
-            end
-            
-            -- Initial setup
-            updateOptions()
-            
-            -- Dropdown toggle
-            dropdownButton.MouseButton1Click:Connect(function()
-                isOpen = not isOpen
-                
-                if isOpen then
-                    local contentHeight = dropdownListLayout.AbsoluteContentSize.Y
-                    CreateTween(dropdownFrame, {
-                        Size = UDim2.new(1, 0, 0, 50 + contentHeight)
-                    }, 0.3)
-                    CreateTween(dropdownArrow, {Rotation = 180}, 0.3)
-                else
-                    CreateTween(dropdownFrame, {Size = UDim2.new(1, 0, 0, 50)}, 0.3)
-                    CreateTween(dropdownArrow, {Rotation = 0}, 0.3)
-                end
-            end)
-            
-            -- Refresh button functionality
-            if refreshButton then
-                refreshButton.MouseButton1Click:Connect(function()
-                    -- Rotation animation
-                    CreateTween(refreshButton, {Rotation = refreshButton.Rotation + 360}, 0.8)
-                    
-                    -- Call refresh function
-                    if dropdownRefresh then
-                        local newOptions = dropdownRefresh()
-                        if newOptions and type(newOptions) == "table" then
-                            dropdownList = newOptions
-                            
-                            -- Close dropdown if open
-                            if isOpen then
-                                isOpen = false
-                                CreateTween(dropdownFrame, {Size = UDim2.new(1, 0, 0, 50)}, 0.3)
-                                CreateTween(dropdownArrow, {Rotation = 0}, 0.3)
-                            end
-                            
-                            -- Update options
-                            updateOptions()
-                            
-                            -- Check if current option still exists
-                            local found = false
-                            for _, option in ipairs(dropdownList) do
-                                if tostring(option) == tostring(currentOption) then
-                                    found = true
-                                    break
-                                end
-                            end
-                            
-                            if not found and #dropdownList > 0 then
-                                currentOption = dropdownList[1]
-                                dropdownLabel.Text = tostring(currentOption)
-                                pcall(function()
-                                    dropdownCallback(currentOption)
-                                end)
-                            elseif #dropdownList == 0 then
-                                currentOption = nil
-                                dropdownLabel.Text = dropdownName
-                            end
-                        end
-                    end
-                end)
-                
-                refreshButton.MouseEnter:Connect(function()
-                    CreateTween(refreshButton, {BackgroundColor3 = window.Theme.Accent}, 0.2)
-                    CreateTween(refreshButton, {TextColor3 = window.Theme.Text}, 0.2)
-                end)
-                
-                refreshButton.MouseLeave:Connect(function()
-                    CreateTween(refreshButton, {BackgroundColor3 = window.Theme.Secondary}, 0.2)
-                    CreateTween(refreshButton, {TextColor3 = window.Theme.TextDim}, 0.2)
-                end)
-            end
-            
-            local element = {
-                Name = dropdownName,
-                SetOption = function(option)
-                    currentOption = option
-                    dropdownLabel.Text = tostring(option)
-                    pcall(function()
-                        dropdownCallback(option)
-                    end)
-                end,
-                GetOption = function()
-                    return currentOption
-                end,
-                UpdateOptions = function(newOptions)
-                    dropdownList = newOptions or {}
-                    
-                    -- Close dropdown if open
-                    if isOpen then
-                        isOpen = false
-                        CreateTween(dropdownFrame, {Size = UDim2.new(1, 0, 0, 50)}, 0.3)
-                        CreateTween(dropdownArrow, {Rotation = 0}, 0.3)
-                    end
-                    
-                    updateOptions()
-                    
-                    -- Reset if current option not in new list
-                    local found = false
-                    for _, option in ipairs(dropdownList) do
-                        if tostring(option) == tostring(currentOption) then
-                            found = true
-                            break
-                        end
-                    end
-                    
-                    if not found and #dropdownList > 0 then
-                        currentOption = dropdownList[1]
-                        dropdownLabel.Text = tostring(currentOption)
-                        pcall(function()
-                            dropdownCallback(currentOption)
-                        end)
-                    elseif #dropdownList == 0 then
-                        currentOption = nil
-                        dropdownLabel.Text = dropdownName
-                    end
-                end,
-                Refresh = function()
-                    if dropdownRefresh then
-                        local newOptions = dropdownRefresh()
-                        if newOptions then
-                            element.UpdateOptions(newOptions)
-                        end
-                    end
-                end,
-                AddOption = function(option)
-                    table.insert(dropdownList, option)
-                    updateOptions()
-                end,
-                RemoveOption = function(option)
-                    for i, opt in ipairs(dropdownList) do
-                        if tostring(opt) == tostring(option) then
-                            table.remove(dropdownList, i)
-                            break
-                        end
-                    end
-                    updateOptions()
-                end,
-                Clear = function()
-                    dropdownList = {}
-                    currentOption = nil
-                    dropdownLabel.Text = dropdownName
-                    updateOptions()
-                    
-                    -- Close dropdown if open
-                    if isOpen then
-                        isOpen = false
-                        CreateTween(dropdownFrame, {Size = UDim2.new(1, 0, 0, 50)}, 0.3)
-                        CreateTween(dropdownArrow, {Rotation = 0}, 0.3)
-                    end
-                end
-            }
-            
-            table.insert(tab.Elements, element)
-            table.insert(window.Elements, element)
-            return element
-        end
-        
-        -- ADVANCED SMART SEARCH ELEMENT
-        function tab:CreateSmartSearch(options)
-            options = options or {}
-            local searchName = options.Name or "Smart Search"
-            local searchPath = options.Path or "workspace-Items" -- örnek: "workspace-Items", "Players", "ReplicatedStorage-Items"
-            local searchCallback = options.Callback or function() end
-            local searchPlaceholder = options.Placeholder or "Search or select..."
-            local autoRefresh = options.AutoRefresh or false
-            local refreshInterval = options.RefreshInterval or 3
-            local stackDuplicates = options.Stack or false
-            local customFunction = options.CustomFunction or nil -- Custom scan function
-            
-            local searchFrame = CreateInstance("Frame", {
-                Size = UDim2.new(1, 0, 0, 50),
-                BackgroundColor3 = window.Theme.Background,
-                BackgroundTransparency = 0.7,
-                ClipsDescendants = true,
-                LayoutOrder = 110
-            })
-            searchFrame.Parent = tabContent
-            
-            CreateInstance("UICorner", {
-                CornerRadius = UDim.new(0, 12)
-            }, searchFrame)
-            
-            -- Search input box
-            local searchBox = CreateInstance("TextBox", {
-                Size = UDim2.new(1, -120, 0, 30),
-                Position = UDim2.new(0, 20, 0, 10),
-                BackgroundColor3 = window.Theme.Secondary,
-                BorderSizePixel = 0,
-                Text = "",
-                PlaceholderText = searchPlaceholder,
-                PlaceholderColor3 = window.Theme.TextDim,
+                Text = keybindDefault.Name,
                 TextColor3 = window.Theme.Text,
                 TextSize = 13,
-                Font = Config.Font,
-                ClearTextOnFocus = false
+                Font = Config.Font
             })
-            searchBox.Parent = searchFrame
+            keybindButton.Parent = keybindFrame
             
             CreateInstance("UICorner", {
                 CornerRadius = UDim.new(0, 8)
-            }, searchBox)
+            }, keybindButton)
             
-            -- Status indicators
-            local statusContainer = CreateInstance("Frame", {
-                Size = UDim2.new(0, 80, 0, 30),
-                Position = UDim2.new(1, -95, 0, 10),
-                BackgroundTransparency = 1
-            })
-            statusContainer.Parent = searchFrame
+            local currentKey = keybindDefault
+            local listening = false
+            local holding = false
             
-            -- Item count
-            local itemCount = CreateInstance("TextLabel", {
-                Size = UDim2.new(0, 40, 1, 0),
-                Position = UDim2.new(0, 0, 0, 0),
-                BackgroundTransparency = 1,
-                Text = "(0)",
-                TextColor3 = window.Theme.Accent,
-                TextSize = 11,
-                Font = Config.Font
-            })
-            itemCount.Parent = statusContainer
+            -- Add to global keybinds list
+            GlobalSettings.KeybindList[keybindName] = currentKey
+            if window.SettingsTab and window.SettingsTab.UpdateKeybinds then
+                window.SettingsTab.UpdateKeybinds()
+            end
             
-            -- Dropdown arrow
-            local dropdownArrow = CreateInstance("TextLabel", {
-                Size = UDim2.new(0, 20, 0, 20),
-                Position = UDim2.new(0, 25, 0, 5),
-                BackgroundTransparency = 1,
-                Text = "▼",
-                TextColor3 = window.Theme.TextDim,
-                TextSize = 12,
-                Font = Config.Font
-            })
-            dropdownArrow.Parent = statusContainer
+            keybindButton.MouseButton1Click:Connect(function()
+                listening = true
+                keybindButton.Text = "..."
+                CreateTween(keybindButton, {BackgroundColor3 = window.Theme.Accent}, 0.2)
+            end)
             
-            -- Auto-refresh indicator
-            local refreshIndicator = nil
-            if autoRefresh then
-                refreshIndicator = CreateInstance("Frame", {
-                    Size = UDim2.new(0, 6, 0, 6),
-                    Position = UDim2.new(0, 50, 0, 12),
-                    BackgroundColor3 = Color3.fromRGB(0, 255, 0),
-                    BorderSizePixel = 0
-                })
-                refreshIndicator.Parent = statusContainer
-                
-                CreateInstance("UICorner", {
-                    CornerRadius = UDim.new(1, 0)
-                }, refreshIndicator)
-                
-                -- Pulse animation
-                spawn(function()
-                    while refreshIndicator and refreshIndicator.Parent do
-                        CreateTween(refreshIndicator, {BackgroundTransparency = 0.5}, 0.5)
-                        wait(0.5)
-                        if refreshIndicator and refreshIndicator.Parent then
-                            CreateTween(refreshIndicator, {BackgroundTransparency = 0}, 0.5)
-                        end
-                        wait(0.5)
+            UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                if listening and not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard then
+                    currentKey = input.KeyCode
+                    keybindButton.Text = currentKey.Name
+                    listening = false
+                    CreateTween(keybindButton, {BackgroundColor3 = window.Theme.Secondary}, 0.2)
+                    
+                    -- Update global list
+                    GlobalSettings.KeybindList[keybindName] = currentKey
+                    if window.SettingsTab and window.SettingsTab.UpdateKeybinds then
+                        window.SettingsTab.UpdateKeybinds()
+                    end
+                elseif input.KeyCode == currentKey and not gameProcessed and not listening then
+                    if keybindHold then
+                        holding = true
+                        keybindCallback(true)
+                    else
+                        keybindCallback()
+                    end
+                end
+            end)
+            
+            if keybindHold then
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.KeyCode == currentKey and holding then
+                        holding = false
+                        keybindCallback(false)
                     end
                 end)
             end
-            
-            -- Manual refresh button
-            local refreshButton = CreateInstance("TextButton", {
-                Size = UDim2.new(0, 20, 0, 20),
-                Position = UDim2.new(0, 60, 0, 5),
-                BackgroundColor3 = window.Theme.Secondary,
-                BorderSizePixel = 0,
-                Text = "↻",
-                TextColor3 = window.Theme.TextDim,
-                TextSize = 14,
-                Font = Config.Font
-            })
-            refreshButton.Parent = statusContainer
-            
-            CreateInstance("UICorner", {
-                CornerRadius = UDim.new(0, 4)
-            }, refreshButton)
-            
-            -- Results container
-            local resultsFrame = CreateInstance("ScrollingFrame", {
-                Size = UDim2.new(1, -40, 0, 0),
-                Position = UDim2.new(0, 20, 0, 45),
-                BackgroundColor3 = window.Theme.Secondary,
-                BorderSizePixel = 0,
-                Visible = true,
-                ClipsDescendants = true,
-                ScrollBarThickness = 3,
-                ScrollBarImageColor3 = window.Theme.Accent,
-                CanvasSize = UDim2.new(0, 0, 0, 0),
-                ScrollingDirection = Enum.ScrollingDirection.Y
-            })
-            resultsFrame.Parent = searchFrame
-            
-            CreateInstance("UICorner", {
-                CornerRadius = UDim.new(0, 8)
-            }, resultsFrame)
-            
-            local resultsLayout = CreateInstance("UIListLayout", {
-                SortOrder = Enum.SortOrder.LayoutOrder,
-                Padding = UDim.new(0, 2)
-            })
-            resultsLayout.Parent = resultsFrame
-            
-            -- Variables
-            local currentList = {}
-            local filteredList = {}
-            local selectedItem = nil
-            local isOpen = false
-            local refreshConnection = nil
-            local resultButtons = {}
-            
-            -- Function to scan items based on path
-            local function scanItems()
-                local items = {}
-                
-                if customFunction then
-                    -- Use custom function
-                    items = ItemScanner:ScanCustom(customFunction)
-                elseif searchPath == "Players" then
-                    -- Scan players
-                    items = ItemScanner:ScanPlayers()
-                else
-                    -- Scan game path
-                    items = ItemScanner:ScanPath(searchPath, stackDuplicates)
-                end
-                
-                return items or {}
-            end
-            
-            -- Function to filter items based on search query
-            local function filterItems(query)
-                if query == "" then
-                    return currentList
-                end
-                
-                local results = {}
-                local lowerQuery = query:lower()
-                
-                -- Create scored results for better sorting
-                local scoredResults = {}
-                
-                for _, item in pairs(currentList) do
-                    local itemText = tostring(item):lower()
-                    local score = 0
-                    
-                    -- Exact match gets highest score
-                    if itemText == lowerQuery then
-                        score = 1000
-                    -- Starts with query gets high score
-                    elseif itemText:sub(1, #lowerQuery) == lowerQuery then
-                        score = 500
-                    -- Contains query gets medium score
-                    elseif itemText:find(lowerQuery, 1, true) then
-                        score = 100
-                    end
-                    
-                    if score > 0 then
-                        table.insert(scoredResults, {item = item, score = score, text = itemText})
-                    end
-                end
-                
-                -- Sort by score (highest first)
-                table.sort(scoredResults, function(a, b)
-                    if a.score == b.score then
-                        return a.text < b.text -- Alphabetical if same score
-                    end
-                    return a.score > b.score
-                end)
-                
-                -- Extract items from scored results
-                for _, result in ipairs(scoredResults) do
-                    table.insert(results, result.item)
-                end
-                
-                return results
-            end
-            
-            -- Function to update results display
-            local function updateResults(query)
-                query = query or ""
-                
-                -- Clear previous results
-                for _, button in pairs(resultButtons) do
-                    button:Destroy()
-                end
-                resultButtons = {}
-                
-                -- Filter items
-                filteredList = filterItems(query)
-                
-                -- Create result buttons
-                local maxResults = math.min(#filteredList, 10) -- Max 10 visible results
-                for i = 1, maxResults do
-                    local item = filteredList[i]
-                    local resultButton = CreateInstance("TextButton", {
-                        Size = UDim2.new(1, -4, 0, 28),
-                        BackgroundColor3 = window.Theme.Background,
-                        BackgroundTransparency = 0.9,
-                        Text = tostring(item),
-                        TextColor3 = window.Theme.TextDim,
-                        TextSize = 12,
-                        Font = Config.Font,
-                        BorderSizePixel = 0,
-                        LayoutOrder = i
-                    })
-                    resultButton.Parent = resultsFrame
-                    table.insert(resultButtons, resultButton)
-                    
-                    CreateInstance("UICorner", {
-                        CornerRadius = UDim.new(0, 6)
-                    }, resultButton)
-                    
-                    -- Highlight matching text for search results
-                    if query ~= "" then
-                        local itemText = tostring(item):lower()
-                        local queryLower = query:lower()
-                        if itemText:sub(1, #queryLower) == queryLower then
-                            -- Starts with query - make it more prominent
-                            resultButton.TextColor3 = window.Theme.Accent
-                        elseif itemText:find(queryLower, 1, true) then
-                            -- Contains query - subtle highlight
-                            resultButton.TextColor3 = window.Theme.Text
-                        end
-                    end
-                    
-                    resultButton.MouseEnter:Connect(function()
-                        CreateTween(resultButton, {
-                            BackgroundTransparency = 0.7,
-                            TextColor3 = window.Theme.Text
-                        }, 0.1)
-                    end)
-                    
-                    resultButton.MouseLeave:Connect(function()
-                        local textColor = window.Theme.TextDim
-                        if query ~= "" then
-                            local itemText = tostring(item):lower()
-                            local queryLower = query:lower()
-                            if itemText:sub(1, #queryLower) == queryLower then
-                                textColor = window.Theme.Accent
-                            elseif itemText:find(queryLower, 1, true) then
-                                textColor = window.Theme.Text
-                            end
-                        end
-                        CreateTween(resultButton, {
-                            BackgroundTransparency = 0.9,
-                            TextColor3 = textColor
-                        }, 0.1)
-                    end)
-                    
-                    resultButton.MouseButton1Click:Connect(function()
-                        -- Extract original item name (remove count suffix if stacked)
-                        local originalItem = tostring(item)
-                        if stackDuplicates then
-                            originalItem = originalItem:match("(.+) %(%d+x%)") or originalItem
-                        end
-                        
-                        selectedItem = originalItem
-                        searchBox.Text = originalItem
-                        isOpen = false
-                        searchFrame.Size = UDim2.new(1, 0, 0, 50)
-                        CreateTween(dropdownArrow, {Rotation = 0}, 0.2)
-                        
-                        pcall(function()
-                            searchCallback(originalItem, item) -- Pass both original and display names
-                        end)
-                    end)
-                end
-                
-                -- Update frame size and canvas
-                if isOpen and #filteredList > 0 then
-                    local resultCount = math.min(#filteredList, 10)
-                    local newHeight = 50 + (resultCount * 30) + 10
-                    searchFrame.Size = UDim2.new(1, 0, 0, newHeight)
-                    resultsFrame.CanvasSize = UDim2.new(0, 0, 0, resultsLayout.AbsoluteContentSize.Y)
-                elseif isOpen then
-                    -- Show "No results" message
-                    local noResultsLabel = CreateInstance("TextLabel", {
-                        Size = UDim2.new(1, -4, 0, 30),
-                        BackgroundTransparency = 1,
-                        Text = "No results found",
-                        TextColor3 = window.Theme.TextDim,
-                        TextSize = 12,
-                        Font = Config.Font,
-                        LayoutOrder = 1
-                    })
-                    noResultsLabel.Parent = resultsFrame
-                    table.insert(resultButtons, noResultsLabel)
-                    
-                    searchFrame.Size = UDim2.new(1, 0, 0, 85)
-                end
-                
-                -- Update item count
-                itemCount.Text = "(" .. #filteredList .. "/" .. #currentList .. ")"
-            end
-            
-            -- Function to refresh item list
-            local function refreshList()
-                currentList = scanItems()
-                itemCount.Text = "(" .. #currentList .. ")"
-                
-                -- Update results if dropdown is open
-                if isOpen then
-                    updateResults(searchBox.Text)
-                end
-                
-                -- Flash refresh button
-                CreateTween(refreshButton, {BackgroundColor3 = window.Theme.Accent}, 0.2)
-                CreateTween(refreshButton, {Rotation = refreshButton.Rotation + 360}, 0.5)
-                wait(0.2)
-                CreateTween(refreshButton, {BackgroundColor3 = window.Theme.Secondary}, 0.3)
-            end
-            
-            -- Search box text changed
-            searchBox:GetPropertyChangedSignal("Text"):Connect(function()
-                if isOpen then
-                    updateResults(searchBox.Text)
-                end
-            end)
-            
-            -- Focus to open dropdown
-            searchBox.Focused:Connect(function()
-                if not isOpen then
-                    isOpen = true
-                    updateResults(searchBox.Text)
-                    CreateTween(dropdownArrow, {Rotation = 180}, 0.2)
-                end
-            end)
-            
-            -- Click on arrow/area to toggle
-            local toggleButton = CreateInstance("TextButton", {
-                Size = UDim2.new(0, 80, 0, 30),
-                Position = UDim2.new(1, -95, 0, 10),
-                BackgroundTransparency = 1,
-                Text = "",
-                ZIndex = 2
-            })
-            toggleButton.Parent = searchFrame
-            
-            toggleButton.MouseButton1Click:Connect(function()
-                isOpen = not isOpen
-                
-                if isOpen then
-                    updateResults(searchBox.Text)
-                    CreateTween(dropdownArrow, {Rotation = 180}, 0.2)
-                else
-                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
-                    CreateTween(dropdownArrow, {Rotation = 0}, 0.2)
-                end
-            end)
-            
-            -- Focus lost (with delay for button clicks)
-            searchBox.FocusLost:Connect(function(enterPressed)
-                if enterPressed and selectedItem then
-                    return
-                end
-                
-                task.wait(0.2) -- Wait for button clicks
-                if not searchBox:IsFocused() then
-                    isOpen = false
-                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
-                    CreateTween(dropdownArrow, {Rotation = 0}, 0.2)
-                end
-            end)
-            
-            -- Manual refresh button
-            refreshButton.MouseButton1Click:Connect(function()
-                refreshList()
-            end)
-            
-            refreshButton.MouseEnter:Connect(function()
-                CreateTween(refreshButton, {BackgroundColor3 = window.Theme.Accent}, 0.2)
-                CreateTween(refreshButton, {TextColor3 = window.Theme.Text}, 0.2)
-            end)
-            
-            refreshButton.MouseLeave:Connect(function()
-                CreateTween(refreshButton, {BackgroundColor3 = window.Theme.Secondary}, 0.2)
-                CreateTween(refreshButton, {TextColor3 = window.Theme.TextDim}, 0.2)
-            end)
-            
-            -- Auto-refresh setup
-            if autoRefresh then
-                refreshConnection = task.spawn(function()
-                    while searchFrame and searchFrame.Parent do
-                        task.wait(refreshInterval)
-                        if searchFrame and searchFrame.Parent then
-                            refreshList()
-                        end
-                    end
-                end)
-            end
-            
-            -- Initial scan
-            refreshList()
             
             local element = {
-                Name = searchName,
-                UpdatePath = function(newPath, newStack)
-                    searchPath = newPath or searchPath
-                    stackDuplicates = newStack or stackDuplicates
-                    refreshList()
-                end,
-                SetCustomFunction = function(func)
-                    customFunction = func
-                    refreshList()
-                end,
-                GetSelected = function()
-                    return selectedItem
-                end,
-                SetSelected = function(item)
-                    selectedItem = item
-                    searchBox.Text = tostring(item)
-                    pcall(function()
-                        searchCallback(item)
-                    end)
-                end,
-                Clear = function()
-                    selectedItem = nil
-                    searchBox.Text = ""
-                    isOpen = false
-                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
-                    CreateTween(dropdownArrow, {Rotation = 0}, 0.2)
-                end,
-                Refresh = function()
-                    refreshList()
-                end,
-                GetAllItems = function()
-                    return currentList
-                end,
-                GetFilteredItems = function()
-                    return filteredList
-                end,
-                SetAutoRefresh = function(enabled, interval)
-                    -- Stop old connection
-                    if refreshConnection then
-                        task.cancel(refreshConnection)
-                        refreshConnection = nil
-                    end
-                    
-                    -- Start new if enabled
-                    if enabled then
-                        refreshInterval = interval or refreshInterval
-                        refreshConnection = task.spawn(function()
-                            while searchFrame and searchFrame.Parent do
-                                task.wait(refreshInterval)
-                                if searchFrame and searchFrame.Parent then
-                                    refreshList()
-                                end
-                            end
-                        end)
-                        
-                        -- Update indicator
-                        if refreshIndicator then
-                            refreshIndicator.Visible = true
-                        end
-                    else
-                        -- Hide indicator
-                        if refreshIndicator then
-                            refreshIndicator.Visible = false
-                        end
+                Name = keybindName,
+                SetKey = function(key)
+                    currentKey = key
+                    keybindButton.Text = key.Name
+                    GlobalSettings.KeybindList[keybindName] = currentKey
+                    if window.SettingsTab and window.SettingsTab.UpdateKeybinds then
+                        window.SettingsTab.UpdateKeybinds()
                     end
                 end,
-                SetStack = function(enabled)
-                    stackDuplicates = enabled
-                    refreshList()
-                end,
-                Destroy = function()
-                    if refreshConnection then
-                        task.cancel(refreshConnection)
-                    end
-                    searchFrame:Destroy()
+                GetKey = function()
+                    return currentKey
                 end
             }
             
@@ -1847,12 +1617,124 @@ function VoidX:CreateWindow(options)
             return element
         end
         
-        -- Other existing elements (Toggle, Slider, Button, Input, etc.)
+        -- Section Element
+        function tab:CreateSection(sectionName)
+            local sectionFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 35),
+                BackgroundTransparency = 1,
+                LayoutOrder = 100
+            })
+            sectionFrame.Parent = tabContent
+            
+            local sectionLabel = CreateInstance("TextLabel", {
+                Size = UDim2.new(0.5, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Text = sectionName:upper(),
+                TextColor3 = window.Theme.Accent,
+                TextSize = 12,
+                Font = Config.FontBold,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            sectionLabel.Parent = sectionFrame
+            
+            local sectionLine = CreateInstance("Frame", {
+                Size = UDim2.new(0.5, -10, 0, 1),
+                Position = UDim2.new(0.5, 10, 0.5, 0),
+                BackgroundColor3 = window.Theme.Border,
+                BorderSizePixel = 0
+            })
+            sectionLine.Parent = sectionFrame
+        end
+        
+        -- Divider Element
+        function tab:CreateDivider()
+            local divider = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 1),
+                BackgroundColor3 = window.Theme.Border,
+                BackgroundTransparency = 0.5,
+                BorderSizePixel = 0,
+                LayoutOrder = 101
+            })
+            divider.Parent = tabContent
+        end
+        
+        -- Label Element
+        function tab:CreateLabel(text)
+            local labelFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 30),
+                BackgroundTransparency = 1,
+                LayoutOrder = 102
+            })
+            labelFrame.Parent = tabContent
+            
+            local label = CreateInstance("TextLabel", {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Text = text or "Label",
+                TextColor3 = window.Theme.TextDim,
+                TextSize = 13,
+                Font = Config.Font,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            label.Parent = labelFrame
+            
+            return {
+                SetText = function(newText)
+                    label.Text = newText
+                end
+            }
+        end
+        
+        -- Paragraph Element
+        function tab:CreateParagraph(title, content)
+            local paragraphFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 60),
+                BackgroundTransparency = 1,
+                LayoutOrder = 103
+            })
+            paragraphFrame.Parent = tabContent
+            
+            local paragraphTitle = CreateInstance("TextLabel", {
+                Size = UDim2.new(1, 0, 0, 20),
+                BackgroundTransparency = 1,
+                Text = title or "Title",
+                TextColor3 = window.Theme.Text,
+                TextSize = 15,
+                Font = Config.FontBold,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            paragraphTitle.Parent = paragraphFrame
+            
+            local paragraphContent = CreateInstance("TextLabel", {
+                Size = UDim2.new(1, 0, 0, 35),
+                Position = UDim2.new(0, 0, 0, 25),
+                BackgroundTransparency = 1,
+                Text = content or "Content",
+                TextColor3 = window.Theme.TextDim,
+                TextSize = 13,
+                Font = Config.Font,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextWrapped = true
+            })
+            paragraphContent.Parent = paragraphFrame
+            
+            return {
+                SetTitle = function(newTitle)
+                    paragraphTitle.Text = newTitle
+                end,
+                SetContent = function(newContent)
+                    paragraphContent.Text = newContent
+                end
+            }
+        end
+        
+        -- Toggle Element with ripple effect
         function tab:CreateToggle(options)
             options = options or {}
             local toggleName = options.Name or "Toggle"
             local toggleDefault = options.Default or false
             local toggleCallback = options.Callback or function() end
+            local toggleFlag = options.Flag or nil
             
             local toggleFrame = CreateInstance("Frame", {
                 Size = UDim2.new(1, 0, 0, 50),
@@ -1927,12 +1809,35 @@ function VoidX:CreateWindow(options)
             toggleButton.MouseButton1Click:Connect(function()
                 toggled = not toggled
                 updateToggle()
+                
+                -- Ripple effect
+                local ripple = CreateInstance("Frame", {
+                    Size = UDim2.new(0, 0, 0, 0),
+                    Position = UDim2.new(0.5, 0, 0.5, 0),
+                    AnchorPoint = Vector2.new(0.5, 0.5),
+                    BackgroundColor3 = window.Theme.Accent,
+                    BackgroundTransparency = 0.5
+                })
+                ripple.Parent = toggleFrame
+                
+                CreateInstance("UICorner", {
+                    CornerRadius = UDim.new(1, 0)
+                }, ripple)
+                
+                CreateTween(ripple, {
+                    Size = UDim2.new(2, 0, 2, 0),
+                    BackgroundTransparency = 1
+                }, 0.5)
+                
+                task.wait(0.5)
+                ripple:Destroy()
             end)
             
             updateToggle()
             
             local element = {
                 Name = toggleName,
+                Flag = toggleFlag,
                 SetValue = function(value)
                     toggled = value
                     updateToggle()
@@ -1947,6 +1852,146 @@ function VoidX:CreateWindow(options)
             return element
         end
         
+        -- Slider Element with smooth animations
+        function tab:CreateSlider(options)
+            options = options or {}
+            local sliderName = options.Name or "Slider"
+            local sliderMin = options.Min or 0
+            local sliderMax = options.Max or 100
+            local sliderDefault = options.Default or sliderMin
+            local sliderIncrement = options.Increment or 1
+            local sliderCallback = options.Callback or function() end
+            
+            local sliderFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 70),
+                BackgroundColor3 = window.Theme.Background,
+                BackgroundTransparency = 0.7,
+                LayoutOrder = 105
+            })
+            sliderFrame.Parent = tabContent
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 12)
+            }, sliderFrame)
+            
+            local sliderHeader = CreateInstance("Frame", {
+                Size = UDim2.new(1, -40, 0, 30),
+                Position = UDim2.new(0, 20, 0, 10),
+                BackgroundTransparency = 1
+            })
+            sliderHeader.Parent = sliderFrame
+            
+            local sliderLabel = CreateInstance("TextLabel", {
+                Size = UDim2.new(0.7, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Text = sliderName,
+                TextColor3 = window.Theme.Text,
+                TextSize = 14,
+                Font = Config.Font,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            sliderLabel.Parent = sliderHeader
+            
+            local sliderValue = CreateInstance("TextLabel", {
+                Size = UDim2.new(0.3, 0, 1, 0),
+                Position = UDim2.new(0.7, 0, 0, 0),
+                BackgroundTransparency = 1,
+                Text = tostring(sliderDefault),
+                TextColor3 = window.Theme.Accent,
+                TextSize = 14,
+                Font = Config.FontBold,
+                TextXAlignment = Enum.TextXAlignment.Right
+            })
+            sliderValue.Parent = sliderHeader
+            
+            local sliderBar = CreateInstance("Frame", {
+                Size = UDim2.new(1, -40, 0, 6),
+                Position = UDim2.new(0, 20, 0, 45),
+                BackgroundColor3 = window.Theme.Border
+            })
+            sliderBar.Parent = sliderFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(1, 0)
+            }, sliderBar)
+            
+            local sliderFill = CreateInstance("Frame", {
+                Size = UDim2.new(0, 0, 1, 0),
+                BackgroundColor3 = window.Theme.Accent
+            })
+            sliderFill.Parent = sliderBar
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(1, 0)
+            }, sliderFill)
+            
+            -- Gradient on fill
+            CreateInstance("UIGradient", {
+                Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0, window.Theme.Accent),
+                    ColorSequenceKeypoint.new(1, window.Theme.AccentDark)
+                },
+                Rotation = 90
+            }, sliderFill)
+            
+            local dragging = false
+            local currentValue = sliderDefault
+            
+            local function updateSlider(value)
+                value = math.clamp(value, sliderMin, sliderMax)
+                value = math.floor(value / sliderIncrement) * sliderIncrement
+                currentValue = value
+                
+                local percentage = (value - sliderMin) / (sliderMax - sliderMin)
+                CreateTween(sliderFill, {Size = UDim2.new(percentage, 0, 1, 0)}, 0.1)
+                sliderValue.Text = tostring(value)
+                
+                pcall(function()
+                    sliderCallback(value)
+                end)
+            end
+            
+            sliderBar.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                    local connection
+                    connection = RunService.RenderStepped:Connect(function()
+                        if dragging then
+                            local mouse = LocalPlayer:GetMouse()
+                            local percentage = math.clamp((mouse.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
+                            local value = sliderMin + (sliderMax - sliderMin) * percentage
+                            updateSlider(value)
+                        else
+                            connection:Disconnect()
+                        end
+                    end)
+                end
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+            
+            updateSlider(sliderDefault)
+            
+            local element = {
+                Name = sliderName,
+                SetValue = function(value)
+                    updateSlider(value)
+                end,
+                GetValue = function()
+                    return currentValue
+                end
+            }
+            
+            table.insert(tab.Elements, element)
+            table.insert(window.Elements, element)
+            return element
+        end
+        
+        -- Button Element with ripple
         function tab:CreateButton(options)
             options = options or {}
             local buttonName = options.Name or "Button"
@@ -1966,7 +2011,8 @@ function VoidX:CreateWindow(options)
                 Text = buttonName,
                 TextColor3 = Color3.fromRGB(255, 255, 255),
                 TextSize = 14,
-                Font = Config.FontBold
+                Font = Config.FontBold,
+                ClipsDescendants = true
             })
             button.Parent = buttonFrame
             
@@ -1974,8 +2020,50 @@ function VoidX:CreateWindow(options)
                 CornerRadius = UDim.new(0, 10)
             }, button)
             
+            CreateInstance("UIGradient", {
+                Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0, window.Theme.Accent),
+                    ColorSequenceKeypoint.new(1, window.Theme.AccentDark)
+                },
+                Rotation = 45
+            }, button)
+            
             button.MouseButton1Click:Connect(function()
+                -- Ripple effect
+                local mousePos = UserInputService:GetMouseLocation()
+                local buttonPos = button.AbsolutePosition
+                local relativePos = mousePos - buttonPos
+                
+                local ripple = CreateInstance("Frame", {
+                    Size = UDim2.new(0, 0, 0, 0),
+                    Position = UDim2.new(0, relativePos.X, 0, relativePos.Y),
+                    AnchorPoint = Vector2.new(0.5, 0.5),
+                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                    BackgroundTransparency = 0.3
+                })
+                ripple.Parent = button
+                
+                CreateInstance("UICorner", {
+                    CornerRadius = UDim.new(1, 0)
+                }, ripple)
+                
+                CreateTween(ripple, {
+                    Size = UDim2.new(0, 500, 0, 500),
+                    BackgroundTransparency = 1
+                }, 0.5)
+                
                 pcall(buttonCallback)
+                
+                task.wait(0.5)
+                ripple:Destroy()
+            end)
+            
+            button.MouseEnter:Connect(function()
+                CreateTween(button, {BackgroundTransparency = 0.1}, 0.2)
+            end)
+            
+            button.MouseLeave:Connect(function()
+                CreateTween(button, {BackgroundTransparency = 0}, 0.2)
             end)
             
             return {
@@ -1985,32 +2073,953 @@ function VoidX:CreateWindow(options)
             }
         end
         
-        function tab:CreateSection(sectionName)
-            local sectionFrame = CreateInstance("Frame", {
-                Size = UDim2.new(1, 0, 0, 35),
-                BackgroundTransparency = 1,
-                LayoutOrder = 100
-            })
-            sectionFrame.Parent = tabContent
+        -- Dropdown Element (with Refresh)
+        function tab:CreateDropdown(options)
+            options = options or {}
+            local dropdownName = options.Name or "Dropdown"
+            local dropdownList = options.Options or {}
+            local dropdownDefault = options.Default or dropdownList[1]
+            local dropdownCallback = options.Callback or function() end
+            local dropdownRefresh = options.Refresh or nil -- Refresh function
             
-            local sectionLabel = CreateInstance("TextLabel", {
-                Size = UDim2.new(0.5, 0, 1, 0),
+            local dropdownFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 50),
+                BackgroundColor3 = window.Theme.Background,
+                BackgroundTransparency = 0.7,
+                ClipsDescendants = true,
+                LayoutOrder = 107
+            })
+            dropdownFrame.Parent = tabContent
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 12)
+            }, dropdownFrame)
+            
+            local dropdownButton = CreateInstance("TextButton", {
+                Size = UDim2.new(1, 0, 0, 50),
                 BackgroundTransparency = 1,
-                Text = sectionName:upper(),
-                TextColor3 = window.Theme.Accent,
-                TextSize = 12,
-                Font = Config.FontBold,
+                Text = "",
+                TextTransparency = 1
+            })
+            dropdownButton.Parent = dropdownFrame
+            
+            local dropdownLabel = CreateInstance("TextLabel", {
+                Size = UDim2.new(1, -90, 1, 0),
+                Position = UDim2.new(0, 20, 0, 0),
+                BackgroundTransparency = 1,
+                Text = dropdownDefault or dropdownName,
+                TextColor3 = window.Theme.Text,
+                TextSize = 14,
+                Font = Config.Font,
                 TextXAlignment = Enum.TextXAlignment.Left
             })
-            sectionLabel.Parent = sectionFrame
+            dropdownLabel.Parent = dropdownButton
             
-            local sectionLine = CreateInstance("Frame", {
-                Size = UDim2.new(0.5, -10, 0, 1),
-                Position = UDim2.new(0.5, 10, 0.5, 0),
-                BackgroundColor3 = window.Theme.Border,
+            -- Refresh button
+            local refreshButton = nil
+            if dropdownRefresh then
+                refreshButton = CreateInstance("TextButton", {
+                    Size = UDim2.new(0, 30, 0, 30),
+                    Position = UDim2.new(1, -70, 0.5, -15),
+                    BackgroundColor3 = window.Theme.Secondary,
+                    BorderSizePixel = 0,
+                    Text = "↻",
+                    TextColor3 = window.Theme.TextDim,
+                    TextSize = 18,
+                    Font = Config.Font,
+                    Rotation = 0
+                })
+                refreshButton.Parent = dropdownFrame
+                
+                CreateInstance("UICorner", {
+                    CornerRadius = UDim.new(0, 6)
+                }, refreshButton)
+                
+                refreshButton.MouseButton1Click:Connect(function()
+                    -- Rotation animation
+                    CreateTween(refreshButton, {Rotation = 360}, 0.5)
+                    task.wait(0.5)
+                    refreshButton.Rotation = 0
+                    
+                    -- Call refresh function
+                    local newOptions = dropdownRefresh()
+                    if newOptions then
+                        dropdownList = newOptions
+                        
+                        -- Update dropdown options
+                        for _, child in pairs(dropdownListFrame:GetChildren()) do
+                            if child:IsA("TextButton") then
+                                child:Destroy()
+                            end
+                        end
+                        
+                        -- Recreate options
+                        for _, option in ipairs(dropdownList) do
+                            local optionButton = CreateInstance("TextButton", {
+                                Size = UDim2.new(1, 0, 0, 35),
+                                BackgroundColor3 = window.Theme.Background,
+                                BackgroundTransparency = 0.9,
+                                Text = option,
+                                TextColor3 = window.Theme.TextDim,
+                                TextSize = 13,
+                                Font = Config.Font
+                            })
+                            optionButton.Parent = dropdownListFrame
+                            
+                            optionButton.MouseEnter:Connect(function()
+                                CreateTween(optionButton, {
+                                    BackgroundTransparency = 0.7,
+                                    TextColor3 = window.Theme.Text
+                                })
+                            end)
+                            
+                            optionButton.MouseLeave:Connect(function()
+                                CreateTween(optionButton, {
+                                    BackgroundTransparency = 0.9,
+                                    TextColor3 = window.Theme.TextDim
+                                })
+                            end)
+                            
+                            optionButton.MouseButton1Click:Connect(function()
+                                currentOption = option
+                                dropdownLabel.Text = option
+                                pcall(function()
+                                    dropdownCallback(option)
+                                end)
+                                
+                                -- Close dropdown
+                                isOpen = false
+                                CreateTween(dropdownFrame, {Size = UDim2.new(1, 0, 0, 50)})
+                                CreateTween(dropdownArrow, {Rotation = 0})
+                            end)
+                        end
+                    end
+                end)
+                
+                refreshButton.MouseEnter:Connect(function()
+                    CreateTween(refreshButton, {BackgroundColor3 = window.Theme.Accent}, 0.2)
+                    CreateTween(refreshButton, {TextColor3 = window.Theme.Text}, 0.2)
+                end)
+                
+                refreshButton.MouseLeave:Connect(function()
+                    CreateTween(refreshButton, {BackgroundColor3 = window.Theme.Secondary}, 0.2)
+                    CreateTween(refreshButton, {TextColor3 = window.Theme.TextDim}, 0.2)
+                end)
+            end
+            
+            local dropdownArrow = CreateInstance("TextLabel", {
+                Size = UDim2.new(0, 20, 0, 20),
+                Position = UDim2.new(1, -40, 0, 15),
+                BackgroundTransparency = 1,
+                Text = "▼",
+                TextColor3 = window.Theme.TextDim,
+                TextSize = 12,
+                Font = Config.Font
+            })
+            dropdownArrow.Parent = dropdownButton
+            
+            local dropdownListFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 0),
+                Position = UDim2.new(0, 0, 0, 50),
+                BackgroundColor3 = window.Theme.Secondary,
+                BorderSizePixel = 0,
+                Visible = true
+            })
+            dropdownListFrame.Parent = dropdownFrame
+            
+            local dropdownListLayout = CreateInstance("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder
+            })
+            dropdownListLayout.Parent = dropdownListFrame
+            
+            local isOpen = false
+            local currentOption = dropdownDefault
+            
+            -- Create dropdown options
+            local function createOptions()
+                for _, child in pairs(dropdownListFrame:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child:Destroy()
+                    end
+                end
+                
+                for _, option in ipairs(dropdownList) do
+                    local optionButton = CreateInstance("TextButton", {
+                        Size = UDim2.new(1, 0, 0, 35),
+                        BackgroundColor3 = window.Theme.Background,
+                        BackgroundTransparency = 0.9,
+                        Text = option,
+                        TextColor3 = window.Theme.TextDim,
+                        TextSize = 13,
+                        Font = Config.Font
+                    })
+                    optionButton.Parent = dropdownListFrame
+                    
+                    optionButton.MouseEnter:Connect(function()
+                        CreateTween(optionButton, {
+                            BackgroundTransparency = 0.7,
+                            TextColor3 = window.Theme.Text
+                        })
+                    end)
+                    
+                    optionButton.MouseLeave:Connect(function()
+                        CreateTween(optionButton, {
+                            BackgroundTransparency = 0.9,
+                            TextColor3 = window.Theme.TextDim
+                        })
+                    end)
+                    
+                    optionButton.MouseButton1Click:Connect(function()
+                        currentOption = option
+                        dropdownLabel.Text = option
+                        pcall(function()
+                            dropdownCallback(option)
+                        end)
+                        
+                        -- Close dropdown
+                        isOpen = false
+                        CreateTween(dropdownFrame, {Size = UDim2.new(1, 0, 0, 50)})
+                        CreateTween(dropdownArrow, {Rotation = 0})
+                    end)
+                end
+            end
+            
+            createOptions()
+            
+            dropdownButton.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                
+                if isOpen then
+                    local contentHeight = dropdownListLayout.AbsoluteContentSize.Y
+                    CreateTween(dropdownFrame, {
+                        Size = UDim2.new(1, 0, 0, 50 + contentHeight)
+                    })
+                    CreateTween(dropdownArrow, {Rotation = 180})
+                else
+                    CreateTween(dropdownFrame, {Size = UDim2.new(1, 0, 0, 50)})
+                    CreateTween(dropdownArrow, {Rotation = 0})
+                end
+            end)
+            
+            local element = {
+                Name = dropdownName,
+                SetOption = function(option)
+                    currentOption = option
+                    dropdownLabel.Text = option
+                    pcall(function()
+                        dropdownCallback(option)
+                    end)
+                end,
+                GetOption = function()
+                    return currentOption
+                end,
+                UpdateOptions = function(newOptions)
+                    dropdownList = newOptions or {}
+                    createOptions()
+                    
+                    -- Reset if current option not in new list
+                    local found = false
+                    for _, option in ipairs(dropdownList) do
+                        if option == currentOption then
+                            found = true
+                            break
+                        end
+                    end
+                    
+                    if not found and #dropdownList > 0 then
+                        currentOption = dropdownList[1]
+                        dropdownLabel.Text = currentOption
+                        pcall(function()
+                            dropdownCallback(currentOption)
+                        end)
+                    end
+                end,
+                Refresh = function()
+                    if dropdownRefresh then
+                        if refreshButton then
+                            -- Trigger refresh animation
+                            CreateTween(refreshButton, {Rotation = 360}, 0.5)
+                            task.wait(0.5)
+                            refreshButton.Rotation = 0
+                        end
+                        
+                        local newOptions = dropdownRefresh()
+                        if newOptions then
+                            element.UpdateOptions(newOptions)
+                        end
+                    end
+                end,
+                AddOption = function(option)
+                    table.insert(dropdownList, option)
+                    createOptions()
+                end,
+                RemoveOption = function(option)
+                    for i, opt in ipairs(dropdownList) do
+                        if opt == option then
+                            table.remove(dropdownList, i)
+                            break
+                        end
+                    end
+                    createOptions()
+                end,
+                Clear = function()
+                    dropdownList = {}
+                    currentOption = nil
+                    dropdownLabel.Text = dropdownName
+                    createOptions()
+                end
+            }
+            
+            table.insert(tab.Elements, element)
+            table.insert(window.Elements, element)
+            return element
+        end
+        
+        -- Player Search Element
+        function tab:CreatePlayerSearch(options)
+            options = options or {}
+            local searchName = options.Name or "Player Search"
+            local searchCallback = options.Callback or function() end
+            local includeDisplayNames = options.IncludeDisplayNames or true
+            
+            local searchFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 50),
+                BackgroundColor3 = window.Theme.Background,
+                BackgroundTransparency = 0.7,
+                ClipsDescendants = true,
+                LayoutOrder = 108
+            })
+            searchFrame.Parent = tabContent
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 12)
+            }, searchFrame)
+            
+            local searchLabel = CreateInstance("TextLabel", {
+                Size = UDim2.new(0.35, 0, 0, 50),
+                Position = UDim2.new(0, 20, 0, 0),
+                BackgroundTransparency = 1,
+                Text = searchName,
+                TextColor3 = window.Theme.TextDim,
+                TextSize = 14,
+                Font = Config.Font,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            searchLabel.Parent = searchFrame
+            
+            local searchBox = CreateInstance("TextBox", {
+                Size = UDim2.new(0.6, -20, 0, 30),
+                Position = UDim2.new(0.4, 0, 0, 10),
+                BackgroundColor3 = window.Theme.Secondary,
+                BorderSizePixel = 0,
+                Text = "",
+                PlaceholderText = "Search player...",
+                PlaceholderColor3 = window.Theme.TextDim,
+                TextColor3 = window.Theme.Text,
+                TextSize = 13,
+                Font = Config.Font,
+                ClearTextOnFocus = false
+            })
+            searchBox.Parent = searchFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 8)
+            }, searchBox)
+            
+            -- Results dropdown
+            local resultsFrame = CreateInstance("Frame", {
+                Size = UDim2.new(0.6, -20, 0, 0),
+                Position = UDim2.new(0.4, 0, 0, 45),
+                BackgroundColor3 = window.Theme.Secondary,
+                BorderSizePixel = 0,
+                Visible = true,
+                ClipsDescendants = true
+            })
+            resultsFrame.Parent = searchFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 8)
+            }, resultsFrame)
+            
+            local resultsLayout = CreateInstance("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder
+            })
+            resultsLayout.Parent = resultsFrame
+            
+            local selectedPlayer = nil
+            local searchResults = {}
+            
+            local function searchPlayers(query)
+                -- Clear previous results
+                for _, child in pairs(resultsFrame:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child:Destroy()
+                    end
+                end
+                searchResults = {}
+                
+                if query == "" then
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                    return
+                end
+                
+                local lowerQuery = query:lower()
+                
+                for _, player in pairs(Players:GetPlayers()) do
+                    local nameMatch = player.Name:lower():find(lowerQuery, 1, true)
+                    local displayMatch = includeDisplayNames and player.DisplayName:lower():find(lowerQuery, 1, true)
+                    
+                    if nameMatch or displayMatch then
+                        table.insert(searchResults, player)
+                        
+                        local resultButton = CreateInstance("TextButton", {
+                            Size = UDim2.new(1, 0, 0, 30),
+                            BackgroundColor3 = window.Theme.Background,
+                            BackgroundTransparency = 0.9,
+                            Text = player.DisplayName .. " (@" .. player.Name .. ")",
+                            TextColor3 = window.Theme.TextDim,
+                            TextSize = 12,
+                            Font = Config.Font,
+                            BorderSizePixel = 0
+                        })
+                        resultButton.Parent = resultsFrame
+                        
+                        resultButton.MouseEnter:Connect(function()
+                            CreateTween(resultButton, {
+                                BackgroundTransparency = 0.7,
+                                TextColor3 = window.Theme.Text
+                            })
+                        end)
+                        
+                        resultButton.MouseLeave:Connect(function()
+                            CreateTween(resultButton, {
+                                BackgroundTransparency = 0.9,
+                                TextColor3 = window.Theme.TextDim
+                            })
+                        end)
+                        
+                        resultButton.MouseButton1Click:Connect(function()
+                            selectedPlayer = player
+                            searchBox.Text = player.Name
+                            searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                            pcall(function()
+                                searchCallback(player)
+                            end)
+                        end)
+                    end
+                end
+                
+                -- Update frame size based on results
+                local resultCount = math.min(#searchResults, 5) -- Max 5 results shown
+                if resultCount > 0 then
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50 + (resultCount * 30))
+                else
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                end
+            end
+            
+            searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+                searchPlayers(searchBox.Text)
+            end)
+            
+            searchBox.FocusLost:Connect(function()
+                task.wait(0.2) -- Wait for click events
+                if selectedPlayer and searchBox.Text == selectedPlayer.Name then
+                    -- Keep the selected player
+                else
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                end
+            end)
+            
+            local element = {
+                Name = searchName,
+                GetPlayer = function()
+                    return selectedPlayer
+                end,
+                SetPlayer = function(player)
+                    if player and player:IsA("Player") then
+                        selectedPlayer = player
+                        searchBox.Text = player.Name
+                        pcall(function()
+                            searchCallback(player)
+                        end)
+                    end
+                end,
+                Clear = function()
+                    selectedPlayer = nil
+                    searchBox.Text = ""
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                end
+            }
+            
+            table.insert(tab.Elements, element)
+            table.insert(window.Elements, element)
+            return element
+        end
+        
+        -- Search Element (General Search)
+        function tab:CreateSearch(options)
+            options = options or {}
+            local searchName = options.Name or "Search"
+            local searchList = options.List or {}
+            local searchCallback = options.Callback or function() end
+            local searchPlaceholder = options.Placeholder or "Search..."
+            
+            local searchFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 50),
+                BackgroundColor3 = window.Theme.Background,
+                BackgroundTransparency = 0.7,
+                ClipsDescendants = true,
+                LayoutOrder = 107
+            })
+            searchFrame.Parent = tabContent
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 12)
+            }, searchFrame)
+            
+            local searchBox = CreateInstance("TextBox", {
+                Size = UDim2.new(1, -40, 0, 30),
+                Position = UDim2.new(0, 20, 0, 10),
+                BackgroundColor3 = window.Theme.Secondary,
+                BorderSizePixel = 0,
+                Text = "",
+                PlaceholderText = searchPlaceholder,
+                PlaceholderColor3 = window.Theme.TextDim,
+                TextColor3 = window.Theme.Text,
+                TextSize = 13,
+                Font = Config.Font,
+                ClearTextOnFocus = false
+            })
+            searchBox.Parent = searchFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 8)
+            }, searchBox)
+            
+            -- Search icon
+            local searchIcon = CreateInstance("TextLabel", {
+                Size = UDim2.new(0, 20, 0, 20),
+                Position = UDim2.new(1, -30, 0.5, -10),
+                BackgroundTransparency = 1,
+                Text = "🔍",
+                TextColor3 = window.Theme.TextDim,
+                TextSize = 16,
+                Font = Config.Font
+            })
+            searchIcon.Parent = searchBox
+            
+            -- Results
+            local resultsFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, -40, 0, 0),
+                Position = UDim2.new(0, 20, 0, 45),
+                BackgroundColor3 = window.Theme.Secondary,
+                BorderSizePixel = 0,
+                Visible = true,
+                ClipsDescendants = true
+            })
+            resultsFrame.Parent = searchFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 8)
+            }, resultsFrame)
+            
+            local resultsLayout = CreateInstance("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder
+            })
+            resultsLayout.Parent = resultsFrame
+            
+            local currentList = searchList
+            local selectedItem = nil
+            
+            local function performSearch(query)
+                -- Clear results
+                for _, child in pairs(resultsFrame:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child:Destroy()
+                    end
+                end
+                
+                if query == "" then
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                    return
+                end
+                
+                local results = {}
+                local lowerQuery = query:lower()
+                
+                for _, item in pairs(currentList) do
+                    local itemText = tostring(item)
+                    if itemText:lower():find(lowerQuery, 1, true) then
+                        table.insert(results, item)
+                        
+                        local resultButton = CreateInstance("TextButton", {
+                            Size = UDim2.new(1, 0, 0, 30),
+                            BackgroundColor3 = window.Theme.Background,
+                            BackgroundTransparency = 0.9,
+                            Text = itemText,
+                            TextColor3 = window.Theme.TextDim,
+                            TextSize = 12,
+                            Font = Config.Font,
+                            BorderSizePixel = 0
+                        })
+                        resultButton.Parent = resultsFrame
+                        
+                        resultButton.MouseEnter:Connect(function()
+                            CreateTween(resultButton, {
+                                BackgroundTransparency = 0.7,
+                                TextColor3 = window.Theme.Text
+                            })
+                        end)
+                        
+                        resultButton.MouseLeave:Connect(function()
+                            CreateTween(resultButton, {
+                                BackgroundTransparency = 0.9,
+                                TextColor3 = window.Theme.TextDim
+                            })
+                        end)
+                        
+                        resultButton.MouseButton1Click:Connect(function()
+                            selectedItem = item
+                            searchBox.Text = itemText
+                            searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                            pcall(function()
+                                searchCallback(item)
+                            end)
+                        end)
+                    end
+                end
+                
+                -- Update size
+                local resultCount = math.min(#results, 5)
+                if resultCount > 0 then
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50 + (resultCount * 30))
+                else
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                end
+            end
+            
+            searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+                performSearch(searchBox.Text)
+            end)
+            
+            searchBox.FocusLost:Connect(function()
+                task.wait(0.2)
+                searchFrame.Size = UDim2.new(1, 0, 0, 50)
+            end)
+            
+            local element = {
+                Name = searchName,
+                UpdateList = function(newList)
+                    currentList = newList or {}
+                    performSearch(searchBox.Text)
+                end,
+                GetSelected = function()
+                    return selectedItem
+                end,
+                SetSelected = function(item)
+                    selectedItem = item
+                    searchBox.Text = tostring(item)
+                end,
+                Clear = function()
+                    selectedItem = nil
+                    searchBox.Text = ""
+                    searchFrame.Size = UDim2.new(1, 0, 0, 50)
+                end
+            }
+            
+            table.insert(tab.Elements, element)
+            table.insert(window.Elements, element)
+            return element
+        end
+        
+        -- Input Element
+        function tab:CreateInput(options)
+            options = options or {}
+            local inputName = options.Name or "Input"
+            local inputPlaceholder = options.Placeholder or "Enter text..."
+            local inputDefault = options.Default or ""
+            local inputCallback = options.Callback or function() end
+            
+            local inputFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 50),
+                BackgroundColor3 = window.Theme.Background,
+                BackgroundTransparency = 0.7,
+                LayoutOrder = 108
+            })
+            inputFrame.Parent = tabContent
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 12)
+            }, inputFrame)
+            
+            local inputLabel = CreateInstance("TextLabel", {
+                Size = UDim2.new(0.35, 0, 1, 0),
+                Position = UDim2.new(0, 20, 0, 0),
+                BackgroundTransparency = 1,
+                Text = inputName,
+                TextColor3 = window.Theme.TextDim,
+                TextSize = 14,
+                Font = Config.Font,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            inputLabel.Parent = inputFrame
+            
+            local inputBox = CreateInstance("TextBox", {
+                Size = UDim2.new(0.6, -20, 0, 30),
+                Position = UDim2.new(0.4, 0, 0.5, -15),
+                BackgroundColor3 = window.Theme.Secondary,
+                BorderSizePixel = 0,
+                Text = inputDefault,
+                PlaceholderText = inputPlaceholder,
+                PlaceholderColor3 = window.Theme.TextDim,
+                TextColor3 = window.Theme.Text,
+                TextSize = 13,
+                Font = Config.Font,
+                ClearTextOnFocus = false
+            })
+            inputBox.Parent = inputFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 8)
+            }, inputBox)
+            
+            inputBox.FocusLost:Connect(function(enterPressed)
+                pcall(function()
+                    inputCallback(inputBox.Text, enterPressed)
+                end)
+            end)
+            
+            local element = {
+                Name = inputName,
+                GetText = function()
+                    return inputBox.Text
+                end,
+                SetText = function(text)
+                    inputBox.Text = text
+                end
+            }
+            
+            table.insert(tab.Elements, element)
+            table.insert(window.Elements, element)
+            return element
+        end
+        
+        -- Color Picker Element
+        function tab:CreateColorPicker(options)
+            options = options or {}
+            local colorName = options.Name or "Color Picker"
+            local colorDefault = options.Default or Color3.fromRGB(255, 255, 255)
+            local colorCallback = options.Callback or function() end
+            
+            local colorFrame = CreateInstance("Frame", {
+                Size = UDim2.new(1, 0, 0, 50),
+                BackgroundColor3 = window.Theme.Background,
+                BackgroundTransparency = 0.7,
+                LayoutOrder = 109
+            })
+            colorFrame.Parent = tabContent
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 12)
+            }, colorFrame)
+            
+            local colorLabel = CreateInstance("TextLabel", {
+                Size = UDim2.new(1, -60, 1, 0),
+                Position = UDim2.new(0, 20, 0, 0),
+                BackgroundTransparency = 1,
+                Text = colorName,
+                TextColor3 = window.Theme.Text,
+                TextSize = 14,
+                Font = Config.Font,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            colorLabel.Parent = colorFrame
+            
+            local colorDisplay = CreateInstance("Frame", {
+                Size = UDim2.new(0, 30, 0, 30),
+                Position = UDim2.new(1, -45, 0.5, -15),
+                BackgroundColor3 = colorDefault,
                 BorderSizePixel = 0
             })
-            sectionLine.Parent = sectionFrame
+            colorDisplay.Parent = colorFrame
+            
+            CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 8)
+            }, colorDisplay)
+            
+            CreateInstance("UIStroke", {
+                Color = window.Theme.Border,
+                Thickness = 2
+            }, colorDisplay)
+            
+            local colorButton = CreateInstance("TextButton", {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Text = "",
+                TextTransparency = 1
+            })
+            colorButton.Parent = colorDisplay
+            
+            -- Advanced color picker
+            local pickerOpen = false
+            local currentColor = colorDefault
+            
+            colorButton.MouseButton1Click:Connect(function()
+                pickerOpen = not pickerOpen
+                
+                if pickerOpen then
+                    -- Create color picker popup
+                    local pickerFrame = CreateInstance("Frame", {
+                        Size = UDim2.new(0, 200, 0, 200),
+                        Position = UDim2.new(1, -220, 0, 60),
+                        BackgroundColor3 = window.Theme.Secondary,
+                        BorderSizePixel = 0,
+                        ZIndex = 10
+                    })
+                    pickerFrame.Parent = colorFrame
+                    pickerFrame.Name = "ColorPicker"
+                    
+                    CreateInstance("UICorner", {
+                        CornerRadius = UDim.new(0, 10)
+                    }, pickerFrame)
+                    
+                    -- Hue bar
+                    local hueFrame = CreateInstance("Frame", {
+                        Size = UDim2.new(0, 20, 1, -20),
+                        Position = UDim2.new(1, -30, 0, 10),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        BorderSizePixel = 0
+                    })
+                    hueFrame.Parent = pickerFrame
+                    
+                    CreateInstance("UIGradient", {
+                        Color = ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+                            ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
+                            ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+                            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+                            ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
+                            ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
+                            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+                        },
+                        Rotation = 90
+                    }, hueFrame)
+                    
+                    CreateInstance("UICorner", {
+                        CornerRadius = UDim.new(0, 5)
+                    }, hueFrame)
+                    
+                    -- Saturation/Value picker
+                    local svFrame = CreateInstance("Frame", {
+                        Size = UDim2.new(1, -50, 1, -20),
+                        Position = UDim2.new(0, 10, 0, 10),
+                        BackgroundColor3 = Color3.fromRGB(255, 0, 0),
+                        BorderSizePixel = 0
+                    })
+                    svFrame.Parent = pickerFrame
+                    
+                    CreateInstance("UICorner", {
+                        CornerRadius = UDim.new(0, 5)
+                    }, svFrame)
+                    
+                    local satGradient = CreateInstance("UIGradient", {
+                        Color = ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+                            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+                        },
+                        Transparency = NumberSequence.new{
+                            NumberSequenceKeypoint.new(0, 0),
+                            NumberSequenceKeypoint.new(1, 1)
+                        }
+                    }, svFrame)
+                    
+                    local valGradient = CreateInstance("UIGradient", {
+                        Color = ColorSequence.new(Color3.new(0, 0, 0)),
+                        Transparency = NumberSequence.new{
+                            NumberSequenceKeypoint.new(0, 0),
+                            NumberSequenceKeypoint.new(1, 1)
+                        },
+                        Rotation = 90
+                    }, svFrame)
+                    
+                    -- Function to update color
+                    local function updateColor(h, s, v)
+                        currentColor = Color3.fromHSV(h, s, v)
+                        colorDisplay.BackgroundColor3 = currentColor
+                        svFrame.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+                        pcall(function()
+                            colorCallback(currentColor)
+                        end)
+                    end
+                    
+                    -- Simple preset colors
+                    local presets = {
+                        Color3.fromRGB(255, 0, 0),
+                        Color3.fromRGB(0, 255, 0),
+                        Color3.fromRGB(0, 0, 255),
+                        Color3.fromRGB(255, 255, 0),
+                        Color3.fromRGB(255, 0, 255),
+                        Color3.fromRGB(0, 255, 255),
+                        Color3.fromRGB(255, 255, 255),
+                        Color3.fromRGB(0, 0, 0)
+                    }
+                    
+                    local presetContainer = CreateInstance("Frame", {
+                        Size = UDim2.new(1, -20, 0, 30),
+                        Position = UDim2.new(0, 10, 1, -35),
+                        BackgroundTransparency = 1
+                    })
+                    presetContainer.Parent = pickerFrame
+                    
+                    for i, presetColor in ipairs(presets) do
+                        local presetButton = CreateInstance("TextButton", {
+                            Size = UDim2.new(0, 20, 0, 20),
+                            Position = UDim2.new(0, (i-1) * 22, 0, 5),
+                            BackgroundColor3 = presetColor,
+                            BorderSizePixel = 0,
+                            Text = ""
+                        })
+                        presetButton.Parent = presetContainer
+                        
+                        CreateInstance("UICorner", {
+                            CornerRadius = UDim.new(0, 4)
+                        }, presetButton)
+                        
+                        presetButton.MouseButton1Click:Connect(function()
+                            currentColor = presetColor
+                            colorDisplay.BackgroundColor3 = currentColor
+                            pcall(function()
+                                colorCallback(currentColor)
+                            end)
+                        end)
+                    end
+                else
+                    -- Close picker
+                    local picker = colorFrame:FindFirstChild("ColorPicker")
+                    if picker then
+                        picker:Destroy()
+                    end
+                end
+            end)
+            
+            local element = {
+                Name = colorName,
+                SetColor = function(color)
+                    currentColor = color
+                    colorDisplay.BackgroundColor3 = color
+                    pcall(function()
+                        colorCallback(color)
+                    end)
+                end,
+                GetColor = function()
+                    return currentColor
+                end
+            }
+            
+            table.insert(tab.Elements, element)
+            table.insert(window.Elements, element)
+            return element
         end
         
         table.insert(window.Tabs, tab)
@@ -2040,15 +3049,30 @@ function VoidX:CreateWindow(options)
             end
         end
         
-        if tab.Content then
-            tab.Content.Visible = true
+        -- Handle settings tab
+        if settingsTab and settingsTab.Content then
+            settingsTab.Content.Visible = false
         end
-        if tab.Button then
-            CreateTween(tab.Button, {BackgroundTransparency = 0.8, BackgroundColor3 = window.Theme.Accent}, 0.3)
-            local label = tab.Button:FindFirstChild("TabLabel")
-            if label then
-                CreateTween(label, {TextColor3 = window.Theme.Text}, 0.3)
+        
+        if tab.IsSettings then
+            -- Settings tab selected
+            if tab.Content then
+                tab.Content.Visible = true
             end
+            CreateTween(settingsButton, {BackgroundTransparency = 0.5}, 0.3)
+        else
+            -- Normal tab selected
+            if tab.Content then
+                tab.Content.Visible = true
+            end
+            if tab.Button then
+                CreateTween(tab.Button, {BackgroundTransparency = 0.8, BackgroundColor3 = window.Theme.Accent}, 0.3)
+                local label = tab.Button:FindFirstChild("TabLabel")
+                if label then
+                    CreateTween(label, {TextColor3 = window.Theme.Text}, 0.3)
+                end
+            end
+            CreateTween(settingsButton, {BackgroundTransparency = 0.8}, 0.3)
         end
         
         window.ActiveTab = tab
@@ -2061,18 +3085,31 @@ function VoidX:CreateWindow(options)
         
         window.Theme = newTheme
         
+        -- Animate theme change
         CreateTween(mainFrame, {BackgroundColor3 = newTheme.Background}, 0.5)
         CreateTween(sidebar, {BackgroundColor3 = newTheme.Secondary}, 0.5)
         CreateTween(contentArea, {BackgroundColor3 = newTheme.ContentBG}, 0.5)
+        
+        -- Update all elements
+        for _, tab in pairs(window.Tabs) do
+            if tab.Button then
+                local label = tab.Button:FindFirstChild("TabLabel")
+                if label and window.ActiveTab ~= tab then
+                    CreateTween(label, {TextColor3 = newTheme.TextDim}, 0.3)
+                end
+            end
+        end
     end
     
-    -- Notification System
+    -- Advanced Notification System
     function window:CreateNotification(options)
         options = options or {}
         local title = options.Title or "Notification"
         local content = options.Content or ""
         local duration = options.Duration or 3
         local type = options.Type or "Info"
+        local image = options.Image or nil
+        local actions = options.Actions or {}
         
         local notifColors = {
             Info = window.Theme.Accent,
@@ -2093,6 +3130,7 @@ function VoidX:CreateWindow(options)
             CornerRadius = UDim.new(0, 12)
         }, notif)
         
+        -- Type indicator
         local typeIndicator = CreateInstance("Frame", {
             Size = UDim2.new(0, 4, 1, 0),
             BackgroundColor3 = notifColors[type] or notifColors.Info,
@@ -2104,9 +3142,23 @@ function VoidX:CreateWindow(options)
             CornerRadius = UDim.new(0, 12)
         }, typeIndicator)
         
+        -- Icon
+        if image then
+            local icon = CreateInstance("ImageLabel", {
+                Size = UDim2.new(0, 30, 0, 30),
+                Position = UDim2.new(0, 15, 0, 15),
+                BackgroundTransparency = 1,
+                Image = "rbxassetid://" .. tostring(image),
+                ImageColor3 = window.Theme.Text
+            })
+            icon.Parent = notif
+        end
+        
+        local titleOffset = image and 55 or 15
+        
         local notifTitle = CreateInstance("TextLabel", {
-            Size = UDim2.new(1, -30, 0, 25),
-            Position = UDim2.new(0, 15, 0, 12),
+            Size = UDim2.new(1, -titleOffset - 15, 0, 25),
+            Position = UDim2.new(0, titleOffset, 0, 12),
             BackgroundTransparency = 1,
             Text = title,
             TextColor3 = window.Theme.Text,
@@ -2117,8 +3169,8 @@ function VoidX:CreateWindow(options)
         notifTitle.Parent = notif
         
         local notifContent = CreateInstance("TextLabel", {
-            Size = UDim2.new(1, -30, 0, 30),
-            Position = UDim2.new(0, 15, 0, 37),
+            Size = UDim2.new(1, -titleOffset - 15, 0, 30),
+            Position = UDim2.new(0, titleOffset, 0, 37),
             BackgroundTransparency = 1,
             Text = content,
             TextColor3 = window.Theme.TextDim,
@@ -2128,6 +3180,43 @@ function VoidX:CreateWindow(options)
             TextWrapped = true
         })
         notifContent.Parent = notif
+        
+        -- Actions
+        if #actions > 0 then
+            notif.Size = UDim2.new(0, 350, 0, 140)
+            
+            local actionContainer = CreateInstance("Frame", {
+                Size = UDim2.new(1, -20, 0, 30),
+                Position = UDim2.new(0, 10, 1, -40),
+                BackgroundTransparency = 1
+            })
+            actionContainer.Parent = notif
+            
+            for i, action in ipairs(actions) do
+                local actionButton = CreateInstance("TextButton", {
+                    Size = UDim2.new(0.5, -5, 1, 0),
+                    Position = UDim2.new((i-1) * 0.5, (i-1) * 5, 0, 0),
+                    BackgroundColor3 = window.Theme.Accent,
+                    BorderSizePixel = 0,
+                    Text = action.Name or "Action",
+                    TextColor3 = Color3.fromRGB(255, 255, 255),
+                    TextSize = 12,
+                    Font = Config.Font
+                })
+                actionButton.Parent = actionContainer
+                
+                CreateInstance("UICorner", {
+                    CornerRadius = UDim.new(0, 8)
+                }, actionButton)
+                
+                actionButton.MouseButton1Click:Connect(function()
+                    if action.Callback then
+                        action.Callback()
+                    end
+                    notif:Destroy()
+                end)
+            end
+        end
         
         -- Animate in
         CreateTween(notif, {Position = UDim2.new(1, -370, 1, -120 - (#GlobalSettings.Notifications * 110))}, 0.5, Enum.EasingStyle.Back)
@@ -2145,6 +3234,7 @@ function VoidX:CreateWindow(options)
             end
         end
         
+        -- Update other notifications positions
         for i, n in ipairs(GlobalSettings.Notifications) do
             CreateTween(n, {Position = UDim2.new(1, -370, 1, -120 - ((i-1) * 110))}, 0.3)
         end
@@ -2153,23 +3243,133 @@ function VoidX:CreateWindow(options)
         notif:Destroy()
     end
     
-    -- Toggle UI Visibility
+    -- Config System
+    function window:SaveConfig(configName)
+        local config = {
+            Theme = GlobalSettings.Theme,
+            ToggleKey = GlobalSettings.ToggleKey.Name,
+            Elements = {}
+        }
+        
+        for _, element in pairs(window.Elements) do
+            if element.GetValue then
+                config.Elements[element.Name] = element.GetValue()
+            elseif element.GetKey then
+                config.Elements[element.Name] = element.GetKey().Name
+            elseif element.GetOption then
+                config.Elements[element.Name] = element.GetOption()
+            elseif element.GetText then
+                config.Elements[element.Name] = element.GetText()
+            elseif element.GetColor then
+                local color = element.GetColor()
+                config.Elements[element.Name] = {
+                    R = color.R,
+                    G = color.G,
+                    B = color.B
+                }
+            end
+        end
+        
+        ConfigManager:SaveConfig(configName or GlobalSettings.CurrentConfig, config)
+        
+        window:CreateNotification({
+            Title = "Config Saved",
+            Content = "Configuration saved as: " .. (configName or GlobalSettings.CurrentConfig),
+            Type = "Success",
+            Duration = 2
+        })
+    end
+    
+    function window:LoadConfig(configName)
+        local config = ConfigManager:LoadConfig(configName or GlobalSettings.CurrentConfig)
+        
+        if config then
+            if config.Theme then
+                window:ChangeTheme(config.Theme)
+                GlobalSettings.Theme = config.Theme
+            end
+            
+            if config.ToggleKey then
+                GlobalSettings.ToggleKey = Enum.KeyCode[config.ToggleKey]
+            end
+            
+            if config.Elements then
+                for _, element in pairs(window.Elements) do
+                    local value = config.Elements[element.Name]
+                    if value ~= nil then
+                        if element.SetValue then
+                            element.SetValue(value)
+                        elseif element.SetKey then
+                            element.SetKey(Enum.KeyCode[value])
+                        elseif element.SetOption then
+                            element.SetOption(value)
+                        elseif element.SetText then
+                            element.SetText(value)
+                        elseif element.SetColor and type(value) == "table" then
+                            element.SetColor(Color3.new(value.R, value.G, value.B))
+                        end
+                    end
+                end
+            end
+            
+            window:CreateNotification({
+                Title = "Config Loaded",
+                Content = "Configuration loaded: " .. (configName or GlobalSettings.CurrentConfig),
+                Type = "Success",
+                Duration = 2
+            })
+        else
+            window:CreateNotification({
+                Title = "Config Error",
+                Content = "Failed to load configuration",
+                Type = "Error",
+                Duration = 3
+            })
+        end
+    end
+    
+    -- Toggle UI Visibility (Fixed for Shift Lock compatibility)
     local isVisible = true
     local toggleConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if input.KeyCode == GlobalSettings.ToggleKey and not gameProcessed then
-            isVisible = not isVisible
-            mainFrame.Visible = isVisible
-            
-            if isVisible then
-                CreateTween(mainFrame, {Position = UDim2.new(0.5, -windowSize.X.Offset/2, 0.5, -windowSize.Y.Offset/2)}, 0.5, Enum.EasingStyle.Back)
+        -- Check if it's our toggle key and not being processed by game
+        if input.KeyCode == GlobalSettings.ToggleKey then
+            -- Additional check for shift lock
+            if input.KeyCode == Enum.KeyCode.RightShift or input.KeyCode == Enum.KeyCode.LeftShift then
+                -- Wait a frame to see if shift lock is being toggled
+                task.wait()
+                
+                -- Check if mouse is locked (shift lock active)
+                local mouseLocked = UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter
+                
+                -- Only toggle UI if shift lock is not being used
+                if not mouseLocked and not gameProcessed then
+                    isVisible = not isVisible
+                    mainFrame.Visible = isVisible
+                    
+                    if isVisible then
+                        CreateTween(mainFrame, {Position = UDim2.new(0.5, -windowSize.X.Offset/2, 0.5, -windowSize.Y.Offset/2)}, 0.5, Enum.EasingStyle.Back)
+                    end
+                end
+            else
+                -- Non-shift keys work normally
+                if not gameProcessed then
+                    isVisible = not isVisible
+                    mainFrame.Visible = isVisible
+                    
+                    if isVisible then
+                        CreateTween(mainFrame, {Position = UDim2.new(0.5, -windowSize.X.Offset/2, 0.5, -windowSize.Y.Offset/2)}, 0.5, Enum.EasingStyle.Back)
+                    end
+                end
             end
         end
     end)
     
+    -- Store connection for cleanup
     if getgenv then
         table.insert(getgenv().VoidXConnections, toggleConnection)
     end
     
+    -- Destroy function
     function window:Destroy()
         screenGui:Destroy()
         if getgenv then
